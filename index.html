@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#667eea">
+<title>Помогатор</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,-apple-system,'SF Pro Display',Roboto,sans-serif;-webkit-tap-highlight-color:transparent}
+body{background:linear-gradient(135deg,#667eea,#764ba2,#667eea);background-size:400% 400%;animation:bgShift 12s ease infinite;min-height:100vh;color:#333;padding:10px;user-select:none;-webkit-user-select:none}
+input,textarea,select{user-select:text;-webkit-user-select:text}
+button{-webkit-appearance:none;appearance:none;cursor:pointer;font-family:inherit}
+@keyframes bgShift{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes pop{0%{transform:scale(.6);opacity:0}60%{transform:scale(1.1)}100%{transform:scale(1);opacity:1}}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+@keyframes successPop{0%{transform:scale(.3) rotate(-180deg);opacity:0}60%{transform:scale(1.4) rotate(15deg)}100%{transform:scale(1) rotate(0);opacity:1}}
+@keyframes titleShine{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+@keyframes locateSpin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+@keyframes myLocationPulse{0%{transform:translate(-50%,-50%) scale(.8);opacity:1}50%{transform:translate(-50%,-50%) scale(1.6);opacity:.4}100%{transform:translate(-50%,-50%) scale(2.2);opacity:0}}
+@keyframes crownGlow{0%,100%{filter:drop-shadow(0 0 4px rgba(255,215,0,.6))}50%{filter:drop-shadow(0 0 12px rgba(255,215,0,1))}}
+.blue-title{display:flex;align-items:center;gap:8px;padding:12px 16px;margin-bottom:14px;background:linear-gradient(135deg,#3b82f6,#1e40af);color:#fff!important;font-size:15px;font-weight:700;border-radius:12px}
+.blue-label{display:inline-flex;align-items:center;gap:5px;padding:5px 10px;margin-bottom:6px;background:linear-gradient(135deg,#3b82f6,#1e40af);color:#fff!important;font-size:11px;font-weight:700;border-radius:7px}
+.btn{width:100%;min-height:48px;padding:13px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;margin-top:5px}
+.btn-o{background:#fff;color:#667eea;border:2px solid #667eea}
+.btn-g{background:linear-gradient(135deg,#28a745,#20c997)}
+.btn-gold{background:linear-gradient(135deg,#fbbf24,#d97706);color:#fff}
+.btn-sm{padding:8px 12px;font-size:12px;width:auto;margin:0;min-height:36px}
+.btn-danger{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff}
+.btn-warning{background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff}
+.avatar{width:40px;height:40px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:20px;background:#e0e7ff;border:2px solid #fff;flex-shrink:0;overflow:hidden}
+.avatar img{width:100%;height:100%;object-fit:cover}
+.avatar-verified-badge{position:absolute;bottom:-2px;right:-2px;background:#28a745;color:#fff;border-radius:50%;width:16px;height:16px;display:flex;align-items:center;justify-content:center;font-size:10px;border:2px solid #fff}
+.avatar-upload-box{display:flex;flex-direction:column;align-items:center;gap:10px;padding:16px;background:#f8f9ff;border-radius:14px;border:2px dashed #c7d2fe}
+.avatar-upload-preview{width:90px;height:90px;border-radius:50%;overflow:hidden;background:#dbeafe;display:flex;align-items:center;justify-content:center;font-size:40px;border:3px solid #fff}
+.avatar-upload-preview img{width:100%;height:100%;object-fit:cover}
+.avatar-upload-btn{width:100%;min-height:48px;padding:12px;background:linear-gradient(135deg,#3b82f6,#1e40af);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700}
+.avatar-upload-remove{padding:8px 14px;border-radius:8px;border:none;background:#dc3545;color:#fff;font-size:12px;font-weight:700}
+.container{max-width:500px;margin:0 auto;width:100%}
+header{display:flex;align-items:center;justify-content:space-between;gap:10px;color:#fff;margin-bottom:12px}
+h1{font-size:1.5em;background:linear-gradient(90deg,#fff,#ffd700,#fff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:titleShine 3s infinite;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.auth-bar{display:flex;gap:6px}
+.auth-bar button{padding:8px 10px;border-radius:12px;border:none;background:#3b82f6;color:#fff;font-size:16px;min-width:44px;min-height:44px}
+.card{background:#fff;border-radius:16px;padding:14px;box-shadow:0 10px 25px rgba(0,0,0,.2);margin-bottom:12px}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-bottom:12px}
+.tab{min-height:44px;padding:9px 6px;border:none;border-radius:9px;background:#3b82f6;color:#fff;font-weight:600;font-size:11px}
+.tab.active{background:#1e40af}
+.services{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:14px}
+.service{padding:8px 4px;border:2px solid #e0e0e0;border-radius:11px;text-align:center;background:#fafafa;min-height:85px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.service.selected{background:#f0f3ff;border-color:#667eea}
+.service .icon-svg{width:32px;height:32px;margin-bottom:4px}
+.service .name{font-weight:600;font-size:10px;line-height:1.2}
+.fg{margin-bottom:10px}
+label{display:block;margin-bottom:4px;font-weight:600;font-size:12px;color:#555}
+input,textarea,select{width:100%;padding:12px 14px;border:2px solid #e0e0e0;border-radius:10px;font-size:16px;background:#fff;min-height:48px;-webkit-appearance:none}
+textarea{resize:none;min-height:64px}
+.photo-btn{width:100%;min-height:52px;background:#3b82f6;color:#fff;border:none;border-radius:14px;font-weight:700}
+.publish-btn{width:100%;min-height:56px;background:#1e40af;color:#fff;border:none;border-radius:14px;font-size:16px;font-weight:800;margin-top:8px}
+.time-preset{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px}
+.time-preset-btn{min-height:44px;padding:8px;border:2px solid #e0e0e0;border-radius:9px;background:#fff;font-size:12px;font-weight:600}
+.time-preset-btn.blue-time{background:#3b82f6;color:#fff;border-color:#3b82f6}
+.time-preset-btn.blue-time.active{background:#1e40af}
+.map-wrap{position:relative;margin-bottom:10px}
+#map{height:200px;border-radius:10px;z-index:1}
+.locate-btn{position:absolute;bottom:12px;right:12px;z-index:500;width:52px;height:52px;border-radius:50%;background:#fff;border:2px solid #667eea}
+.locate-btn svg{width:24px;height:24px;color:#667eea}
+.st{display:inline-block;padding:4px 10px;border-radius:14px;font-size:10px;font-weight:700;margin-top:4px}
+.st-new{background:#fff3cd;color:#856404}
+.st-in_progress{background:#cfe2ff;color:#084298}
+.st-done{background:#d1e7dd;color:#0f5132}
+.st-cancelled{background:#f8d7da;color:#842029}
+.e{text-align:center;padding:24px;color:#999}
+.t{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:12px 20px;border-radius:12px;z-index:9999;font-size:13px}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:1000;padding:12px}
+.mc{background:#fff;border-radius:16px;padding:18px;max-width:460px;width:100%;max-height:90vh;overflow-y:auto}
+.oi{padding:12px;background:#f8f9ff;border-left:4px solid #667eea;border-radius:10px;margin-bottom:8px;position:relative}
+.oi h4{font-size:13px;margin-bottom:3px}
+.oi p{font-size:11px;color:#777;margin:2px 0}
+.h{display:none!important}
+</style>
+</head>
+<body>
+<div class="container">
+<header>
+  <div class="header-text" onclick="adminTap()">
+    <h1>🏠 Помогатор</h1>
+    <p id="userInfo" style="font-size:12px;opacity:.9">Помощь на дом — назови цену</p>
+  </div>
+  <div class="auth-bar">
+    <button onclick="openAbout()">ℹ️</button>
+    <button onclick="openSettings()">⚙️</button>
+    <button id="authBtn" onclick="openAuth()">👤</button>
+    <button id="outBtn" class="h" onclick="logout()">🚪</button>
+  </div>
+</header>
+<div class="tabs" id="tabs">
+<button class="tab active" data-tab="new" onclick="st('new')">➕ Заказать</button>
+<button class="tab" data-tab="my" onclick="st('my')">📋 Заказы</button>
+<button class="tab h" data-tab="cab" id="cabTab" onclick="st('cab')">💼 Кабинет</button>
+</div>
+<div id="tab-new" class="card">
+<h2 class="blue-title">Что нужно?</h2>
+<div class="services" id="svc"></div>
+<h2 class="blue-title" style="margin-top:14px">Детали</h2>
+<div class="fg"><label class="blue-label">Адрес</label><input id="addr" placeholder="Город, улица, дом..."><div id="addrSuggestions" class="addr-suggestions"></div></div>
+<div class="map-wrap"><div id="map"></div><button class="locate-btn" id="locateBtn" onclick="goToMyLocation()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></button></div>
+<div class="fg"><label class="blue-label">💰 Цена (₽)</label><input id="pr" type="number" placeholder="2000"></div>
+<div class="fg"><label class="blue-label">⏰ Когда нужно</label><div class="time-preset" id="timePresets"><button class="time-preset-btn blue-time active" onclick="pickTime('Скоро', this)">⚡ Скоро</button><button class="time-preset-btn blue-time" onclick="pickTime('Вечером', this)">🌆 Вечером</button><button class="time-preset-btn blue-time" onclick="pickTime('Завтра', this)">📅 Завтра</button><button class="time-preset-btn blue-time" onclick="pickTime('exact', this)">🕐 Точное</button></div><div class="time-exact h" id="exactTimeBox"><input type="date" id="exactDate"><input type="time" id="exactTime" value="10:00"></div></div>
+<div class="fg"><label class="blue-label">💬 Комментарий</label><textarea id="cm" placeholder="Опишите задачу..."></textarea></div>
+<div class="fg"><input type="file" id="ph" accept="image/*" multiple hidden><button class="photo-btn" onclick="document.getElementById('ph').click()">📸 Добавить фото</button><div class="photos" id="phPrev"></div></div>
+<button class="publish-btn" onclick="go()">🚀 Опубликовать заказ</button>
+</div>
+<div id="tab-my" class="card h"><h2 class="blue-title" id="ordersTitle">📋 Мои заказы</h2><div id="userProfileRow"></div><div id="list"></div></div>
+<div id="tab-cab" class="card h"><h2 class="blue-title">💼 Кабинет мастера</h2><div id="cabinetProfileRow"></div><div id="subStatus"></div><div id="cabinet"></div><div class="fg"><select id="mySvc" multiple size="5" style="min-height:120px"></select><button class="btn btn-o btn-sm" onclick="saveServices()">Сохранить</button></div><div class="fg"><textarea id="myBio" placeholder="О себе..."></textarea><button class="btn btn-o btn-sm" onclick="saveBio()">Сохранить</button></div></div>
+<div id="tab-ok" class="card h"><div class="e"><div class="i big" id="successIcon">✅</div><h2 class="blue-title">✅ Готово!</h2><p id="okMsg">Заказ создан</p><button class="btn" onclick="st('my')">Мои заказы</button></div></div>
+</div><div id="authModal" class="modal h"><div class="mc"><h2 class="blue-title">🔐 Вход / Регистрация</h2><div class="fg"><label>Имя</label><input id="aN" placeholder="Иван"></div><div class="fg"><label>Телефон</label><input id="aP" type="tel" placeholder="+7 999 123-45-67"></div><div class="fg"><label>Пароль</label><input id="aPw" type="password"></div><div class="fg"><label>Роль</label><select id="aR" onchange="updateRoleHint()"><option value="client">Заказчик</option><option value="executor">Мастер</option></select></div><div class="fg"><label>Фото профиля</label><div class="avatar-upload-box"><div class="avatar-upload-preview" id="avatarPreview">👤</div><input type="file" id="avatarFile" accept="image/*" style="display:none" onchange="handleAvatarFile(event)"><button class="avatar-upload-btn" onclick="document.getElementById('avatarFile').click()">📷 Загрузить</button><div class="avatar-upload-hint" id="avatarHint">JPG, PNG</div></div></div><button class="btn" onclick="login()">Войти</button><button class="btn btn-o" onclick="reg()">Зарегистрироваться</button><button class="btn btn-o" onclick="document.getElementById('authModal').classList.add('h')">Отмена</button></div></div>
+<div id="orderModal" class="modal h"><div class="mc"><div id="orderDetail"></div><button class="btn btn-o" onclick="closeOrder()">Закрыть</button></div></div>
+<div id="settingsModal" class="modal h"><div class="mc"><h2 class="blue-title">⚙️ Настройки</h2><div id="settingsProfile"></div><div class="settings-section"><label>Звук</label><label class="switch"><input type="checkbox" id="setSound" checked><span class="slider"></span></label></div><div class="settings-section"><label>Тема</label><div class="theme-picker"><button class="theme-btn active" onclick="setTheme('light')">☀️ Светлая</button><button class="theme-btn" onclick="setTheme('dark')">🌙 Тёмная</button></div></div><button class="btn btn-o" onclick="closeSettings()">Закрыть</button></div></div>
+<div id="aboutModal" class="modal h"><div class="mc"><h2 class="blue-title">ℹ️ О приложении</h2><div class="about-section"><p>Соединяем людей с мастерами по всей России. Без посредников.</p></div><button class="btn btn-o" onclick="document.getElementById('aboutModal').classList.add('h')">Закрыть</button></div></div>
+<div id="confirmModal" class="modal h"><div class="mc"><h2 class="blue-title" id="confirmTitle">Подтвердите</h2><p id="confirmText"></p><input id="confirmInput" style="display:none;margin-bottom:14px"><div style="display:flex;gap:8px"><button class="btn btn-o" onclick="closeConfirm()" style="flex:1">Отмена</button><button class="btn" onclick="submitConfirm()" style="flex:1" id="confirmOk">OK</button></div></div></div>
+<script>
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function localDateISO(d=new Date()){return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+const Sound=(()=>{let ctx=null,enabled=true;function beep(){try{if(!ctx)ctx=new(window.AudioContext||window.webkitAudioContext)();if(ctx.state==='suspended')ctx.resume();const o=ctx.createOscillator(),g=ctx.createGain();o.type='sine';o.frequency.value=600;g.gain.value=0.1;o.connect(g);g.connect(ctx.destination);o.start();o.stop(ctx.currentTime+0.1);}catch{}}return{click:beep,tap:beep,select:beep,success:beep,error:beep,setEnabled:v=>{enabled=v;},setVolume:()=>{}};})();
+
+const SVG_ICONS={
+clean:`<svg viewBox="0 0 48 48" fill="none"><path d="M14 20l6-12M20 20l-6-12M20 20v16M20 36h8M28 20l4-8M32 20l-4-8M32 20v16M32 36h6" stroke="#667eea" stroke-width="2.5" stroke-linecap="round"/></svg>`,
+repair:`<svg viewBox="0 0 48 48" fill="none"><path d="M30 18l-8 8M34 14a6 6 0 01-8 8l-8 8a4 4 0 11-6-6l8-8a6 6 0 018-8l-4 4 2 2 4-4z" stroke="#f5576c" stroke-width="2.5"/></svg>`,
+plumb:`<svg viewBox="0 0 48 48" fill="none"><path d="M24 6c-4 8-10 12-10 18a10 10 0 0020 0c0-6-6-10-10-18z" stroke="#4facfe" stroke-width="2.5"/></svg>`,
+electr:`<svg viewBox="0 0 48 48" fill="none"><path d="M20 4l-8 22h8l-2 18 14-24h-8l4-16H20z" stroke="#f6d365" stroke-width="2.5"/></svg>`,
+furn:`<svg viewBox="0 0 48 48" fill="none"><path d="M10 24v10h28V24M8 24v-4a4 4 0 014-4h24a4 4 0 014 4v4M14 34v4M34 34v4M12 24h24" stroke="#a18cd1" stroke-width="2.5" stroke-linecap="round"/></svg>`,
+appliance:`<svg viewBox="0 0 48 48" fill="none"><rect x="12" y="6" width="24" height="36" rx="4" stroke="#8b5cf6" stroke-width="2.5"/><circle cx="24" cy="28" r="8" stroke="#8b5cf6" stroke-width="2.5"/><circle cx="24" cy="28" r="3" fill="#8b5cf6"/></svg>`,
+tech:`<svg viewBox="0 0 48 48" fill="none"><rect x="6" y="10" width="36" height="24" rx="3" stroke="#43e97b" stroke-width="2.5"/><path d="M18 40h12M24 34v6" stroke="#43e97b" stroke-width="2.5"/></svg>`,
+shop:`<svg viewBox="0 0 48 48" fill="none"><path d="M8 14h4l4 20h20l4-16H14" stroke="#fa709a" stroke-width="2.5" stroke-linecap="round"/><circle cx="18" cy="40" r="2" fill="#fa709a"/><circle cx="34" cy="40" r="2" fill="#fa709a"/></svg>`,
+move:`<svg viewBox="0 0 48 48" fill="none"><path d="M24 6l18 12v18l-18 6-18-6V18l18-12z" stroke="#fbc2eb" stroke-width="2.5"/><path d="M24 6v30M6 18l18 12 18-12" stroke="#fbc2eb" stroke-width="2.5"/></svg>`,
+yard:`<svg viewBox="0 0 48 48" fill="none"><path d="M24 42V20M24 20c-6 0-10-4-10-10 6 0 10 4 10 10zm0 0c6 0 10-4 10-10-6 0-10 4-10 10z" stroke="#84fab0" stroke-width="2.5"/></svg>`,
+auto:`<svg viewBox="0 0 48 48" fill="none"><path d="M10 32h28v-8l-4-10a2 2 0 00-2-1H16a2 2 0 00-2 1l-4 10v8z" stroke="#06b6d4" stroke-width="2.5"/><circle cx="16" cy="34" r="3" stroke="#06b6d4" stroke-width="2.5" fill="none"/><circle cx="32" cy="34" r="3" stroke="#06b6d4" stroke-width="2.5" fill="none"/></svg>`
+};
+
+const services=[{n:'Уборка',svg:'clean'},{n:'Мелкий ремонт',svg:'repair'},{n:'Сантехника',svg:'plumb'},{n:'Электрика',svg:'electr'},{n:'Сборка мебели',svg:'furn'},{n:'Ремонт техники',svg:'appliance'},{n:'Помощь с ПК',svg:'tech'},{n:'Доставка',svg:'shop'},{n:'Переезд',svg:'move'},{n:'Участок',svg:'yard'},{n:'Помощь с авто',svg:'auto'}];
+
+let user=JSON.parse(localStorage.getItem('pg_user')||'null');
+let selectedService=null,currentOrderId=null,coords={lat:55.751244,lng:37.618423};
+let map,marker,selectedPhotos=[],uploadedAvatar=null;
+let selectedTime={preset:'Скоро'},confirmCallback=null;
+
+const DB={users:()=>JSON.parse(localStorage.getItem('pg_users')||'[]'),saveUsers:u=>localStorage.setItem('pg_users',JSON.stringify(u)),orders:()=>JSON.parse(localStorage.getItem('pg_orders')||'[]'),saveOrders:o=>localStorage.setItem('pg_orders',JSON.stringify(o))};
+
+function renderServices(){document.getElementById('svc').innerHTML=services.map(s=>`<div class="service" data-n="${s.n}" onclick="pick('${s.n}')"><div class="icon-svg">${SVG_ICONS[s.svg]}</div><div class="name">${s.n}</div></div>`).join('');}
+function pick(n){selectedService=services.find(s=>s.n===n);document.querySelectorAll('.service').forEach(e=>e.classList.toggle('selected',e.dataset.n===n));Sound.select();}
+function st(t){Sound.click();document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.tab===t));document.querySelectorAll('[id^="tab-"]').forEach(c=>c.classList.add('h'));document.getElementById('tab-'+t).classList.remove('h');if(t==='my')renderOrders();if(t==='new')setTimeout(initMap,100);if(t==='cab')renderCabinet();}
+function pickTime(value,btn){document.querySelectorAll('.time-preset-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');selectedTime.preset=value;document.getElementById('exactTimeBox').classList.toggle('h',value!=='exact');Sound.click();}
+function getTimeValue(){if(selectedTime.preset==='exact'){const d=document.getElementById('exactDate').value,t=document.getElementById('exactTime').value;if(!d||!t)return'Скоро';return d+' '+t;}return selectedTime.preset;}
+function toast(m){Sound.error();const e=document.createElement('div');e.className='t';e.textContent=m;document.body.appendChild(e);setTimeout(()=>e.remove(),2500);}
+function confirm2(title,text,onOk,okLabel){document.getElementById('confirmTitle').textContent=title;document.getElementById('confirmText').textContent=text||'';document.getElementById('confirmOk').textContent=okLabel||'OK';confirmCallback=()=>{closeConfirm();if(onOk)onOk();};document.getElementById('confirmModal').classList.remove('h');}
+function closeConfirm(){document.getElementById('confirmModal').classList.add('h');confirmCallback=null;}
+function submitConfirm(){if(confirmCallback)confirmCallback();}
+
+function openAuth(){uploadedAvatar=null;document.getElementById('avatarPreview').innerHTML='👤';document.getElementById('aR').value='client';updateRoleHint();document.getElementById('authModal').classList.remove('h');}
+function updateRoleHint(){const role=document.getElementById('aR').value;document.getElementById('avatarHint').innerHTML=role==='executor'?'<b style="color:red">Обязательно!</b>':'JPG, PNG';}
+function login(){const p=document.getElementById('aP').value.trim(),pw=document.getElementById('aPw').value;const u=DB.users().find(x=>x.phone===p&&x.password===pw);if(!u)return toast('Неверный телефон или пароль');user={id:u.id,name:u.name,phone:u.phone,role:u.role,avatar:u.avatar||null,verified:u.verified||false};localStorage.setItem('pg_user',JSON.stringify(user));document.getElementById('authModal').classList.add('h');ui();}
+function reg(){const n=document.getElementById('aN').value.trim(),p=document.getElementById('aP').value.trim(),pw=document.getElementById('aPw').value,r=document.getElementById('aR').value;if(!n||!p||!pw)return toast('Заполните поля');if(r==='executor'&&!uploadedAvatar)return toast('Мастер обязан загрузить фото');const users=DB.users();if(users.find(x=>x.phone===p))return toast('Телефон занят');const u={id:Date.now(),name:n,phone:p,password:pw,role:r,avatar:uploadedAvatar,verified:false,services:[],bio:'',rating:5,completed_orders:0};users.push(u);DB.saveUsers(users);if(r==='executor'){return toast('Мастер зарегистрирован (проверка лица отключена)');}user={id:u.id,name:u.name,phone:u.phone,role:u.role,avatar:uploadedAvatar,verified:false};localStorage.setItem('pg_user',JSON.stringify(user));document.getElementById('authModal').classList.add('h');ui();}
+function logout(){user=null;localStorage.removeItem('pg_user');ui();}
+function ui(){const b=document.getElementById('authBtn'),o=document.getElementById('outBtn'),c=document.getElementById('cabTab'),info=document.getElementById('userInfo'),newTab=document.querySelector('[data-tab="new"]');if(user){b.classList.add('h');o.classList.remove('h');info.textContent=`${user.name} — ${user.role==='executor'?'мастер':'заказчик'}`;if(user.role==='executor'){c.classList.remove('h');newTab.classList.add('h');document.getElementById('ordersTitle').textContent='📋 Доступные заказы';}else{c.classList.add('h');newTab.classList.remove('h');document.getElementById('ordersTitle').textContent='📋 Мои заказы';}}else{b.classList.remove('h');o.classList.add('h');c.classList.add('h');newTab.classList.remove('h');info.textContent='Помощь на дом — назови цену';}}
+
+function initMap(){if(map)return;try{map=L.map('map',{center:[60,90],zoom:3,minZoom:2,maxZoom:19,attributionControl:false});L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);marker=L.marker([coords.lat,coords.lng],{draggable:true}).addTo(map);marker.on('dragend',()=>{coords=marker.getLatLng();rev();});map.on('click',e=>{coords=e.latlng;marker.setLatLng(coords);rev();});}catch(e){}}
+async function rev(){try{const r=await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${coords.lat}&lon=${coords.lng}&accept-language=ru`);const d=await r.json();if(d.display_name)document.getElementById('addr').value=d.display_name.split(', ').slice(0,4).join(', ');}catch(e){}}
+function goToMyLocation(){if(!navigator.geolocation)return toast('Нет GPS');navigator.geolocation.getCurrentPosition(p=>{coords={lat:p.coords.latitude,lng:p.coords.longitude};if(map){map.setView(coords,15);marker.setLatLng(coords);rev();}},()=>toast('Ошибка GPS'));}
+function go(){if(!user)return openAuth();if(user.role!=='client')return toast('Только заказчики');if(!selectedService)return toast('Выберите услугу');const a=document.getElementById('addr').value.trim();if(!a)return toast('Укажите адрес');const o={id:Date.now(),user_id:user.id,name:user.name,service:selectedService.n,iconSvg:selectedService.svg,price:document.getElementById('pr').value?document.getElementById('pr').value+' ₽':'договорная',address:a,time:getTimeValue(),status:'new',created_ts:Date.now()};const arr=DB.orders();arr.unshift(o);DB.saveOrders(arr);st('ok');}
+function renderOrders(){if(!user)return openAuth();const box=document.getElementById('list');let arr=DB.orders();if(user.role==='client')arr=arr.filter(o=>o.user_id===user.id);else arr=arr.filter(o=>o.status==='new');if(!arr.length){box.innerHTML='<div class="e">📭 Пусто</div>';return;}box.innerHTML=arr.map(o=>`<div class="oi" onclick="openOrder(${o.id})"><h4>${esc(o.service)} — ${esc(o.price)}</h4><p>📍 ${esc(o.address)}</p><span class="st st-${o.status}">Ждёт откликов</span></div>`).join('');}
+function openOrder(id){currentOrderId=id;const o=DB.orders().find(x=>x.id===id);document.getElementById('orderDetail').innerHTML=`<h2 class="blue-title">${esc(o.service)}</h2><p>💰 ${esc(o.price)}</p><p>📍 ${esc(o.address)}</p><p>⏰ ${esc(o.time)}</p>`;document.getElementById('orderModal').classList.remove('h');}
+function closeOrder(){document.getElementById('orderModal').classList.add('h');}
+
+function handleAvatarFile(e){const file=e.target.files[0];if(!file)return;const r=new FileReader();r.onload=()=>{uploadedAvatar=r.result;document.getElementById('avatarPreview').innerHTML=`<img src="${uploadedAvatar}">`;};r.readAsDataURL(file);}
+function renderCabinet(){if(!user||user.role!=='executor')return;document.getElementById('cabinet').innerHTML=`<p>Кабинет мастера</p>`;}
+function saveServices(){toast('Сохранено');}
+function saveBio(){toast('Сохранено');}
+function openSettings(){document.getElementById('settingsModal').classList.remove('h');}
+function closeSettings(){document.getElementById('settingsModal').classList.add('h');}
+function openAbout(){document.getElementById('aboutModal').classList.remove('h');}
+function setTheme(t){document.body.classList.toggle('dark', t==='dark');}
+
+renderServices();
+ui();
+</script>
+</body>
+</html>
