@@ -1,0 +1,1135 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#667eea">
+<title>Помогатор</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+/* --- БАЗОВЫЕ СТИЛИ --- */
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,-apple-system,sans-serif;-webkit-tap-highlight-color:transparent}
+body{background:linear-gradient(135deg,#667eea,#764ba2,#667eea);background-size:400% 400%;animation:bgShift 12s ease infinite;min-height:100vh;color:#333;padding:10px;user-select:none;transition:background 0.3s}
+body.dark{background:#1e293b}
+@keyframes bgShift{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+.container{max-width:500px;margin:0 auto;width:100%}
+.h{display:none!important}
+
+/* --- ШАПКА --- */
+header{display:flex;align-items:center;justify-content:space-between;gap:10px;color:#fff;margin-bottom:20px;padding-top:10px}
+.header-text{flex:1;min-width:0;text-align:left}
+h1{font-size:1.5em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.auth-bar{display:flex;gap:6px;flex-shrink:0}
+.auth-bar button{padding:8px 10px;border-radius:12px;border:none;background:#3b82f6;color:#fff;font-size:16px;min-width:44px;min-height:44px;cursor:pointer;transition:transform 0.1s}
+.auth-bar button:active{transform:scale(0.9)}
+
+/* --- ВКЛАДКИ --- */
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-bottom:12px}
+.tab{min-height:44px;padding:9px 6px;border:none;border-radius:9px;background:#3b82f6;color:#fff;font-weight:600;font-size:11px;cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden}
+.tab.active{background:#1e40af;transform:scale(1.02)}
+.tab::after{content:'';position:absolute;bottom:0;left:50%;width:0;height:3px;background:#fff;transition:all 0.3s ease;transform:translateX(-50%)}
+.tab.active::after{width:80%}
+
+/* --- КАРТОЧКИ --- */
+.card{background:#fff;border-radius:16px;padding:14px;box-shadow:0 12px 32px rgba(0,0,0,.2);margin-bottom:12px;animation:slideUp 0.4s ease-out forwards}
+body.dark .card{background:#334155;color:#fff}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.blue-title{display:flex;align-items:center;gap:8px;padding:12px 16px;margin-bottom:14px;background:linear-gradient(135deg,#3b82f6,#1e40af);color:#fff;font-size:15px;font-weight:700;border-radius:12px}
+
+/* --- УСЛУГИ --- */
+.services{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:14px}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.service{padding:8px 4px;border:2px solid #e0e0e0;border-radius:11px;text-align:center;background:#fafafa;min-height:85px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;animation:fadeInUp 0.5s ease-out forwards;opacity:0;transition:transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), border-color 0.2s, background 0.2s}
+body.dark .service{background:#475569;border-color:#64748b;color:#fff}
+.service.selected{background:#f0f3ff;border-color:#667eea;transform:scale(0.98);animation:bounceSelect 0.3s ease}
+body.dark .service.selected{background:#1e3a8a;border-color:#60a5fa}
+@keyframes bounceSelect{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+.service .icon{width:32px;height:32px;margin-bottom:6px;transition:transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)}
+.service .icon svg{width:100%;height:100%}
+.service:active .icon{transform:scale(1.2) rotate(5deg)}
+.service .name{font-weight:600;font-size:10px;line-height:1.2}
+.service:nth-child(1){animation-delay:0.05s}.service:nth-child(2){animation-delay:0.1s}.service:nth-child(3){animation-delay:0.15s}.service:nth-child(4){animation-delay:0.2s}.service:nth-child(5){animation-delay:0.25s}.service:nth-child(6){animation-delay:0.3s}.service:nth-child(7){animation-delay:0.35s}.service:nth-child(8){animation-delay:0.4s}.service:nth-child(9){animation-delay:0.45s}.service:nth-child(10){animation-delay:0.5s}.service:nth-child(11){animation-delay:0.55s}
+
+/* --- ФОРМЫ --- */
+.fg{margin-bottom:10px}
+label{display:block;margin-bottom:4px;font-weight:600;font-size:12px;color:#555}
+body.dark label{color:#cbd5e1}
+input,textarea,select{width:100%;padding:12px 14px;border:2px solid #e0e0e0;border-radius:10px;font-size:16px;font-family:inherit;background:#fff;min-height:48px;-webkit-appearance:none}
+body.dark input,body.dark textarea,body.dark select{background:#475569;border-color:#64748b;color:#fff}
+input:focus,textarea:focus{outline:none;border-color:#667eea}
+textarea{resize:none;min-height:64px}
+
+/* --- КНОПКИ --- */
+.btn{width:100%;min-height:48px;padding:13px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;margin-top:5px;cursor:pointer;transition:all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)}
+.btn:active{transform:scale(0.94)}
+.btn-o{background:#fff;color:#667eea;border:2px solid #667eea}
+body.dark .btn-o{background:#475569;color:#93c5fd;border-color:#93c5fd}
+.btn-gold{background:linear-gradient(135deg,#fbbf24,#d97706);color:#fff}
+.btn-g{background:linear-gradient(135deg,#28a745,#20c997)}
+.btn-sm{padding:8px 12px;font-size:12px;width:auto;margin:0;min-height:36px}
+.btn-danger{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff}
+.btn-warning{background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff}
+.publish-btn{width:100%;min-height:56px;background:linear-gradient(135deg,#3b82f6,#1e40af);color:#fff;border:none;border-radius:14px;font-size:16px;font-weight:800;margin-top:8px;cursor:pointer;animation:pulseGlow 2s infinite;transition:transform 0.1s}
+.publish-btn:active{transform:scale(0.96)}
+@keyframes pulseGlow{0%{box-shadow:0 0 0 0 rgba(59,130,246,0.4)}70%{box-shadow:0 0 0 12px rgba(59,130,246,0)}100%{box-shadow:0 0 0 0 rgba(59,130,246,0)}}
+
+/* --- ВРЕМЯ --- */
+.time-btn { padding: 10px 5px; border: 2px solid #e0e0e0; border-radius: 8px; background: #fff; font-size: 11px; font-weight: 600; color: #555; cursor: pointer; transition: all 0.2s; }
+.time-btn.active { background: #3b82f6; color: #fff; border-color: #3b82f6; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3); }
+.time-btn:active { transform: scale(0.95); }
+
+/* --- КАРТА --- */
+#map{height:200px;border-radius:10px;margin-bottom:10px;z-index:1}
+.leaflet-control-zoom a{background-color:#fff!important;color:#3b82f6!important;border:none!important;font-weight:bold!important;box-shadow:0 2px 6px rgba(0,0,0,0.15)!important;border-radius:8px!important;margin-bottom:4px}
+.leaflet-control-zoom{border:none!important;box-shadow:none!important}
+@keyframes pulse {0% { transform: scale(0.8); opacity: 1; }50% { transform: scale(1.5); opacity: 0; }100% { transform: scale(0.8); opacity: 0; }}
+
+/* --- СПИСОК ЗАКАЗОВ --- */
+.oi{padding:12px;background:#f8f9ff;border-left:4px solid #667eea;border-radius:10px;margin-bottom:8px;cursor:pointer;position:relative}
+body.dark .oi{background:#475569;color:#fff}
+.oi h4{font-size:13px;margin-bottom:3px}
+.oi p{font-size:11px;color:#777;margin:2px 0}
+body.dark .oi p{color:#cbd5e1}
+.st{display:inline-block;padding:4px 10px;border-radius:14px;font-size:10px;font-weight:700;margin-top:4px}
+.st-new{background:#fff3cd;color:#856404}
+.st-in_progress{background:#cfe2ff;color:#084298}
+.st-cancelled{background:#f8d7da;color:#842029}
+.st-done{background:#d1e7dd;color:#0f5132}
+
+/* --- МОДАЛЬНЫЕ ОКНА --- */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:1000;padding:12px;animation:fadeIn .25s ease-out;backdrop-filter:blur(3px)}
+.mc{background:#fff;border-radius:16px;padding:18px;max-width:460px;width:100%;max-height:90vh;overflow-y:auto;animation:popIn .35s cubic-bezier(0.175, 0.885, 0.32, 1.275)}
+body.dark .mc{background:#1e293b;color:#fff}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes popIn{0%{transform:scale(.8);opacity:0}100%{transform:scale(1);opacity:1}}
+
+/* --- НАСТРОЙКИ --- */
+.settings-section{padding:12px 0;border-bottom:1px solid #f0f0f0}
+body.dark .settings-section{border-color:#475569}
+.settings-label{display:flex;justify-content:space-between;align-items:center;font-size:14px;font-weight:600;color:#333}
+body.dark .settings-label{color:#fff}
+.switch{position:relative;display:inline-block;width:54px;height:30px}
+.switch input{opacity:0;width:0;height:0;position:absolute}
+.slider{position:absolute;inset:0;background:#ccc;border-radius:30px;transition:all .3s}
+.slider::before{content:'';position:absolute;height:24px;width:24px;left:3px;top:3px;background:#fff;border-radius:50%;transition:all .3s}
+.switch input:checked + .slider{background:#3b82f6}
+.switch input:checked + .slider::before{transform:translateX(24px)}
+
+/* --- ПОДПИСКА --- */
+.tariff-option{display:flex;justify-content:space-between;align-items:center;padding:16px;border:2px solid #e0e0e0;border-radius:12px;margin-bottom:8px;background:#fff;cursor:pointer}
+body.dark .tariff-option{background:#334155;border-color:#475569}
+.tariff-option.selected{border-color:#f59e0b;background:#fffbeb}
+body.dark .tariff-option.selected{background:#78350f}
+.tariff-info b{font-size:14px;color:#333;display:block}
+body.dark .tariff-info b{color:#fff}
+.tariff-info small{font-size:11px;color:#888;display:block}
+.tariff-price{font-size:18px;font-weight:800;color:#f59e0b}
+
+/* --- ФОТО ПРЕВЬЮ --- */
+.photo-preview-box{display:flex;gap:5px;margin-top:8px;flex-wrap:wrap}
+.photo-preview-box img{width:60px;height:60px;object-fit:cover;border-radius:8px;border:2px solid #667eea}
+
+/* --- ТОСТЫ --- */
+.toast-container{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;align-items:center;gap:10px;pointer-events:none}
+.toast{background:rgba(0,0,0,.85);color:#fff;padding:12px 24px;border-radius:30px;font-size:14px;font-weight:500;box-shadow:0 4px 15px rgba(0,0,0,.3);animation:toastIn .3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;display:flex;align-items:center;gap:8px;max-width:90vw;text-align:center}
+.toast.success{background:linear-gradient(135deg,#28a745,#20c997)}.toast.error{background:linear-gradient(135deg,#ef4444,#dc2626)}.toast.warning{background:linear-gradient(135deg,#f59e0b,#d97706)}
+@keyframes toastIn{from{opacity:0;transform:translateY(20px) scale(.9)}to{opacity:1;transform:translateY(0) scale(1)}}
+.toast.hide{animation:toastOut .3s ease-in forwards}
+@keyframes toastOut{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(20px)}}
+
+/* --- ЧАТ --- */
+.chat-bubble { max-width: 80%; padding: 10px 14px; border-radius: 16px; margin-bottom: 8px; font-size: 13px; line-height: 1.4; position: relative; }
+.chat-me { align-self: flex-end; background: #3b82f6; color: #fff; border-bottom-right-radius: 4px; }
+.chat-other { align-self: flex-start; background: #e0e7ff; color: #333; border-bottom-left-radius: 4px; }
+.chat-time { font-size: 10px; opacity: 0.7; margin-top: 4px; text-align: right; }
+
+/* --- КНОПКИ РОЛИ --- */
+.role-btn { transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+.role-btn.active { border-color: #3b82f6 !important; background: #f0f8ff !important; color: #3b82f6 !important; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); transform: scale(1.02); }
+.role-btn:active { transform: scale(0.95); }
+
+@media(max-width:360px){.services{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div class="header-text">
+      <h1>🏠 Помогатор</h1>
+      <div id="userBadge" style="display:none; font-size:12px; background:rgba(255,255,255,0.2); padding:4px 12px 4px 6px; border-radius:25px; margin-top:5px; display:inline-flex; align-items:center; gap:8px;">
+        <div id="headerAvatar" style="width:32px; height:32px; border-radius:50%; background:#fff; display:none; background-size:cover; background-position:center; border:2px solid #fff; box-shadow:0 2px 5px rgba(0,0,0,0.2);"></div>
+        <div style="display:flex; flex-direction:column; line-height:1.2;">
+          <span id="userNameDisplay" style="font-weight:700; font-size:13px;">Имя</span>
+          <span id="userRoleDisplay" style="font-size:10px; opacity:0.9;">Роль</span>
+        </div>
+      </div>
+    </div>
+    <div class="auth-bar">
+      <button onclick="openAbout()">ℹ️</button>
+      <button onclick="openSettings()">⚙️</button>
+      <button id="loginBtn" onclick="openAuth()">👤</button>
+      <button id="logoutBtn" class="h" onclick="logout()">🚪</button>
+    </div>
+  </header>
+
+  <div class="tabs" id="tabs">
+    <button class="tab active" onclick="st('new')">➕ Заказать</button>
+    <button class="tab" onclick="st('my')">📋 Заказы</button>
+    <button class="tab h" id="cabTab" onclick="st('cab')">💼 Кабинет</button>
+  </div>
+
+  <!-- ВКЛАДКА: ЗАКАЗАТЬ -->
+  <div id="tab-new" class="card">
+    <div id="timeGreeting" style="background:linear-gradient(135deg, #667eea, #764ba2); color:#fff; padding:10px 15px; border-radius:12px; margin-bottom:15px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 4px 15px rgba(102,126,234,0.4);">
+      <div>
+        <div id="greetingText" style="font-weight:700; font-size:14px;">Добрый день!</div>
+        <div id="currentDate" style="font-size:11px; opacity:0.8;">Сегодня</div>
+      </div>
+      <div id="currentTime" style="font-size:24px; font-weight:800; letter-spacing:1px;">00:00</div>
+    </div>
+
+    <h2 class="blue-title">Что нужно?</h2>
+    <div class="services" id="svc"></div>
+    <h2 class="blue-title">Детали</h2>
+    <div class="fg"><label>Адрес</label><input id="addr" placeholder="Город, улица, дом..." oninput="manualAddressInput(this.value)"></div>
+    <div style="position:relative; margin-bottom:10px;">
+      <div id="map" style="height:200px; border-radius:10px; z-index:1;"></div>
+      <button class="btn btn-sm" onclick="goToMyLocation()" style="position:absolute; bottom:10px; right:10px; z-index:500; background:#fff; color:#3b82f6; border:2px solid #3b82f6; border-radius:50%; width:44px; height:44px; padding:0; font-size:20px; box-shadow:0 2px 10px rgba(0,0,0,0.2)">📍</button>
+    </div>
+    <div class="fg"><label>💰 Цена (₽)</label><input id="pr" type="number" placeholder="2000"></div>
+    
+    <div class="fg" style="background:#fff3cd; padding:10px; border-radius:10px; border:2px solid #ffc107; display:flex; align-items:center; justify-content:space-between;">
+      <div>
+        <label style="margin:0; color:#856404; font-weight:700;">⚡ Срочный заказ</label>
+        <div style="font-size:10px; color:#856404;">Мастера приедут быстрее</div>
+      </div>
+      <label class="switch" style="margin:0;"><input type="checkbox" id="isUrgent"><span class="slider"></span></label>
+    </div>
+
+    <div class="fg">
+      <label>⏰ Когда вам удобно?</label>
+      <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:5px; margin-bottom:8px;">
+        <button type="button" class="time-btn active" onclick="pickTime('Скоро', this)">⚡ Скоро</button>
+        <button type="button" class="time-btn" onclick="pickTime('Сегодня вечером', this)">🌆 Вечером</button>
+        <button type="button" class="time-btn" onclick="pickTime('Завтра', this)">📅 Завтра</button>
+      </div>
+      <div id="exactTimeBox" class="h" style="display:flex; gap:5px;">
+        <input type="date" id="exactDate" style="flex:1;">
+        <input type="time" id="exactTime" value="10:00" style="flex:1;">
+      </div>
+      <button type="button" class="btn btn-o" onclick="toggleExactTime()" style="margin-top:5px; font-size:12px; padding:8px;">🕐 Указать точное время</button>
+    </div>
+
+    <div class="fg"><label>💬 Комментарий</label><textarea id="cm" placeholder="Опишите задачу..."></textarea></div>
+    <div class="fg">
+      <label>📸 Фото (для фронта работ)</label>
+      <input type="file" id="phCamera" accept="image/*" capture="environment" style="display:none" onchange="handlePhotos(event)">
+      <input type="file" id="phGallery" accept="image/*" multiple style="display:none" onchange="handlePhotos(event)">
+      <button class="btn btn-o" onclick="document.getElementById('photoSourceModal').classList.remove('h')" style="display:flex; align-items:center; justify-content:center; gap:8px; border-color:#3b82f6; color:#3b82f6; background:#f0f8ff">
+        <span style="font-size:20px">📷</span> Прикрепить фото
+      </button>
+      <div id="photoPreview" class="photo-preview-box"></div>
+    </div>
+    <button class="publish-btn" onclick="createOrder()">🚀 Опубликовать заказ</button>
+  </div>
+
+  <!-- ВКЛАДКА: ЗАКАЗЫ -->
+  <div id="tab-my" class="card h">
+    <h2 class="blue-title">📋 Заказы</h2>
+    
+    <div style="display:flex; gap:10px; margin-bottom:15px;">
+      <button class="btn btn-sm btn-o active" id="btnActiveOrders" onclick="switchOrderTab('active', this)" style="flex:1; border-radius:20px;">🔥 Активные</button>
+      <button class="btn btn-sm btn-o" id="btnHistoryOrders" onclick="switchOrderTab('history', this)" style="flex:1; border-radius:20px;">📜 История</button>
+    </div>
+
+    <div id="list"></div>
+  </div>
+
+  <!-- ВКЛАДКА: КАБИНЕТ -->
+  <div id="tab-cab" class="card h">
+    <h2 class="blue-title">💼 Кабинет мастера</h2>
+    <div id="cabinetContent">
+      <div id="notMasterMessage" style="text-align:center; padding:20px; color:#666;">
+        <p>Войдите как <b>Мастер</b>, чтобы управлять заказами и подпиской.</p>
+      </div>
+      <div id="masterPanel" class="h">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:15px;">
+          <div class="oi" style="text-align:center; margin:0; padding:15px 10px; background:#f8f9ff; border-left:none; border-radius:12px;">
+            <div style="font-size:24px; margin-bottom:5px;">📦</div>
+            <div style="font-size:11px; color:#888; margin-bottom:2px;">Выполнено</div>
+            <div id="statCompleted" style="font-size:20px; font-weight:800; color:#3b82f6;">0</div>
+          </div>
+          <div class="oi" style="text-align:center; margin:0; padding:15px 10px; background:#f8f9ff; border-left:none; border-radius:12px;">
+            <div style="font-size:24px; margin-bottom:5px;">💰</div>
+            <div style="font-size:11px; color:#888; margin-bottom:2px;">Заработано</div>
+            <div id="statEarned" style="font-size:20px; font-weight:800; color:#28a745;">0 ₽</div>
+          </div>
+          <div class="oi" style="text-align:center; margin:0; padding:15px 10px; background:#f8f9ff; border-left:none; border-radius:12px;">
+            <div style="font-size:24px; margin-bottom:5px;">⭐</div>
+            <div style="font-size:11px; color:#888; margin-bottom:2px;">Рейтинг</div>
+            <div id="statRating" style="font-size:20px; font-weight:800; color:#f59e0b;">0.0</div>
+          </div>
+          <div class="oi" style="text-align:center; margin:0; padding:15px 10px; background:#f8f9ff; border-left:none; border-radius:12px;">
+            <div style="font-size:24px; margin-bottom:5px;">🤝</div>
+            <div style="font-size:11px; color:#888; margin-bottom:2px;">Откликов</div>
+            <div id="statResponses" style="font-size:20px; font-weight:800; color:#8b5cf6;">0</div>
+          </div>
+        </div>
+
+        <div class="settings-section" style="margin-bottom:15px; background:#f8f9ff; border-radius:10px; padding:10px;">
+          <div class="settings-label">
+            <span>📍 Показывать меня на карте</span>
+            <label class="switch"><input type="checkbox" id="showOnMapToggle" onchange="toggleMapVisibility(this)"><span class="slider"></span></label>
+          </div>
+        </div>
+        <button class="btn btn-gold" onclick="openSubModal()" style="margin-top:10px">👑 Оформить подписку «Про»</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- МОДАЛКА: ДЕТАЛИ ЗАКАЗА (КАРТА) -->
+<div id="orderDetailModal" class="modal h">
+  <div class="mc">
+    <h2 class="blue-title" style="justify-content:center;">Детали заказа</h2>
+    <div id="orderDetailsContent"></div>
+    <div id="orderMap" style="height:250px; border-radius:12px; margin:10px 0;"></div>
+    <button class="btn btn-o" onclick="document.getElementById('orderDetailModal').classList.add('h')">Закрыть</button>
+  </div>
+</div>
+
+<!-- МОДАЛКА: АВТОРИЗАЦИЯ -->
+<div id="authModal" class="modal h">
+  <div class="mc">
+    <h2 class="blue-title" style="justify-content:center">🔐 Вход / Регистрация</h2>
+    
+    <div class="fg" style="text-align:center;">
+      <div style="position:relative; width:90px; height:90px; margin:0 auto 10px;">
+        <div id="authAvatarPreview" style="width:100%; height:100%; border-radius:50%; background:linear-gradient(135deg,#dbeafe,#93c5fd); border:3px solid #fff; box-shadow:0 4px 10px rgba(0,0,0,0.1); display:flex; align-items:center; justify-content:center; font-size:40px; color:#fff; overflow:hidden; background-size:cover; background-position:center;">
+          👤
+        </div>
+        <button type="button" onclick="document.getElementById('authAvatarInput').click()" style="position:absolute; bottom:0; right:0; width:32px; height:32px; border-radius:50%; background:#3b82f6; color:#fff; border:2px solid #fff; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:16px;">📷</button>
+        <input type="file" id="authAvatarInput" accept="image/*" style="display:none" onchange="handleAuthAvatar(event)">
+      </div>
+      <div style="font-size:11px; color:#888;">Добавить фото профиля</div>
+    </div>
+
+    <div class="fg"><label>Имя</label><input id="authName" placeholder="Иван"></div>
+    <div class="fg"><label>Телефон</label><input id="authPhone" type="tel" placeholder="+7 999 123-45-67"></div>
+    
+    <div class="fg">
+      <label>Пароль</label>
+      <div style="position:relative; display:flex; align-items:center;">
+        <input id="authPassword" type="password" placeholder="••••••" style="padding-right:45px; width:100%;">
+        <button type="button" onclick="togglePasswordVisibility()" style="position:absolute; right:10px; background:none; border:none; font-size:18px; cursor:pointer; color:#888; padding:5px;" id="eyeBtn">👁️</button>
+      </div>
+    </div>
+
+    <div class="fg"><label>SMS-код (демо: 1234)</label><div style="display:flex; gap:5px;"><input id="smsCode" type="text" placeholder="1234" style="flex:1"><button class="btn btn-o" onclick="sendSmsCode()" style="width:auto; margin:0; font-size:12px; padding:0 10px;">Отправить</button></div></div>
+    
+    <div class="fg">
+      <label>Кто вы?</label>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:5px;">
+        <button type="button" id="btnRoleClient" class="role-btn active" onclick="selectRole('client')" style="padding:15px 10px; border:2px solid #3b82f6; border-radius:12px; background:#f0f8ff; color:#3b82f6; font-weight:700; font-size:14px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:5px;">
+          <span style="font-size:24px;">🏠</span> Заказчик
+        </button>
+        <button type="button" id="btnRoleExecutor" class="role-btn" onclick="selectRole('executor')" style="padding:15px 10px; border:2px solid #e0e0e0; border-radius:12px; background:#fff; color:#555; font-weight:700; font-size:14px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:5px;">
+          <span style="font-size:24px;">🛠</span> Мастер
+        </button>
+      </div>
+      <select id="authRole" style="display:none;"><option value="client">Заказчик</option><option value="executor">Мастер</option></select>
+    </div>
+
+    <div id="masterFields" class="h"><div class="fg" style="text-align:center"><label style="color:#dc3545">Обязательно для мастера!</label><button class="btn" onclick="startFaceCheck()" style="margin-top:5px">📸 Сделать селфи для проверки</button><p id="faceStatus" style="font-size:12px;color:#888;margin-top:5px">Не проверен</p></div></div>
+    
+    <button class="btn" onclick="login()">Войти</button>
+    <button class="btn btn-o" onclick="document.getElementById('authModal').classList.add('h')">Отмена</button>
+  </div>
+</div>
+
+<!-- МОДАЛКА: ВЫБОР ФОТО -->
+<div id="photoSourceModal" class="modal h">
+  <div class="mc">
+    <h2 class="blue-title" style="justify-content:center">📸 Добавить фото</h2>
+    <button class="btn btn-o" onclick="choosePhotoSource('camera')" style="display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:10px; border:2px solid #3b82f6; color:#3b82f6; background:#fff; border-radius:12px; padding:15px;">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+      <span style="font-size:14px; font-weight:700;">Сделать фото</span>
+    </button>
+    <button class="btn btn-o" onclick="choosePhotoSource('gallery')" style="display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:10px; border:2px solid #3b82f6; color:#3b82f6; background:#fff; border-radius:12px; padding:15px;">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+      <span style="font-size:14px; font-weight:700;">Выбрать из галереи</span>
+    </button>
+    <button class="btn btn-o" style="margin-top:10px; border:2px solid #e0e0e0; color:#666; background:#fff; border-radius:12px; padding:15px;" onclick="document.getElementById('photoSourceModal').classList.add('h')">Отмена</button>
+  </div>
+</div>
+
+<!-- МОДАЛКА: ПРОВЕРКА ЛИЦА -->
+<div id="faceCheckModal" class="modal h">
+  <div class="mc" style="text-align:center">
+    <h2 class="blue-title" style="justify-content:center">📸 Проверка лица</h2>
+    <p style="font-size:13px;color:#666;margin-bottom:10px">Сделайте селфи, чтобы подтвердить личность.</p>
+    <video id="faceVideo" autoplay playsinline muted style="width:100%;max-width:260px;border-radius:50%;background:#000;border:4px solid #3b82f6;aspect-ratio:1;object-fit:cover;transform:scaleX(-1);margin-bottom:10px"></video>
+    <button class="btn btn-g" onclick="captureFace()">✅ Сделать снимок</button>
+    <button class="btn btn-o" onclick="cancelFaceCheck()">Отмена</button>
+  </div>
+</div>
+
+<!-- МОДАЛКА: ПОДПИСКА -->
+<div id="subModal" class="modal h">
+  <div class="mc">
+    <h2 class="blue-title" style="justify-content:center">💎 Подписка «Про»</h2>
+    <p style="font-size:13px;color:#666;margin-bottom:15px;text-align:center">7 дней бесплатно, потом подписка.</p>
+    <div class="tariff-option selected" onclick="selectTariff('month', this)"><div class="tariff-info"><b>Месяц</b><small>Оплата раз в месяц</small></div><div class="tariff-price">490 ₽</div></div>
+    <div class="tariff-option" onclick="selectTariff('year', this)"><div class="tariff-info"><b>Год</b><small>Экономия 980 ₽</small></div><div class="tariff-price">4 900 ₽</div></div>
+    <button class="btn btn-gold" onclick="paySubscription()" style="margin-top:10px">👑 Оплатить</button>
+    <button class="btn btn-o" onclick="document.getElementById('subModal').classList.add('h')">Позже</button>
+  </div>
+</div>
+
+<!-- МОДАЛКА: НАСТРОЙКИ -->
+<div id="settingsModal" class="modal h">
+  <div class="mc">
+    <h2 class="blue-title" style="justify-content:center">⚙️ Настройки</h2>
+    <div class="settings-section"><div class="settings-label"><span>🔊 Звук приложения</span><label class="switch"><input type="checkbox" id="soundToggle" checked onchange="toggleSound(this)"><span class="slider"></span></label></div></div>
+    <div class="settings-section"><div class="settings-label"><span>🔔 Звук уведомлений чата</span><label class="switch"><input type="checkbox" id="chatSoundToggle" checked onchange="toggleChatSound(this)"><span class="slider"></span></label></div></div>
+    <div class="settings-section"><div class="settings-label"><span>🎨 Тема</span></div><div style="display:flex; gap:10px; margin-top:8px"><button class="btn btn-o" onclick="setTheme('light')">☀️ Светлая</button><button class="btn btn-o" onclick="setTheme('dark')">🌙 Тёмная</button></div></div>
+    <div class="settings-section"><button class="btn btn-o" onclick="requestPush()" style="margin-top:5px">🔔 Включить Push-уведомления</button></div>
+    <div class="settings-section"><button class="btn btn-o" onclick="window.open('https://max.ru/+79242852799')" style="margin-top:5px">💬 Поддержка в MAX</button></div>
+    <div class="settings-section"><button class="btn btn-o" onclick="openPrivacy()" style="margin-top:5px">🔒 Политика конфиденциальности</button></div>
+    <div class="settings-section"><button class="btn btn-danger" onclick="deleteAccount()" style="margin-top:5px">🗑 Удалить аккаунт</button></div>
+    <button class="btn btn-o" onclick="document.getElementById('settingsModal').classList.add('h')" style="margin-top:15px">Закрыть</button>
+  </div>
+</div>
+
+<!-- МОДАЛКА: О ПРИЛОЖЕНИИ -->
+<div id="aboutModal" class="modal h">
+  <div class="mc">
+    <h2 class="blue-title" style="justify-content:center">ℹ️ О приложении</h2>
+    <div style="font-size:13px; color:#555; line-height:1.6; margin-bottom:15px;">
+      <p style="margin-bottom:10px"><b>Помогатор</b> — это сервис бытовых услуг. Вы называете свою цену, а мастера рядом откликаются на ваш заказ.</p>
+      <p style="margin-bottom:10px"><b>Для кого:</b> Для тех, кому нужна помощь по дому (уборка, ремонт, сантехника), и для мастеров, которые хотят зарабатывать.</p>
+      <p style="margin-bottom:10px"><b>Подписка для мастеров:</b> Первые 7 дней — бесплатно. Далее подписка «Про» — 490 ₽/мес. Для заказчиков — всё бесплатно.</p>
+      <div style="background:#fee2e2; border:2px solid #ef4444; border-radius:10px; padding:12px; margin-top:15px;"><p style="font-size:12px; color:#991b1b; font-weight:700; text-align:center; line-height:1.4;">⚠️ Внимание!<br>Разработчик приложения не несет ответственности за качество услуг, оказанных мастерами, и за финансовые договоренности между заказчиками и исполнителями.</p></div>
+    </div>
+    <div style="background:#f0f3ff; border-radius:10px; padding:12px; text-align:center; margin-bottom:15px;">
+      <p style="font-size:13px; color:#333; font-weight:600; margin-bottom:8px">Есть вопросы?</p>
+      <button class="btn btn-o" onclick="window.open('https://max.ru/+79242852799')" style="margin-top:5px; font-size:13px; padding:8px;">💬 Написать в поддержку MAX</button>
+      <p style="font-size:11px; color:#888; margin-top:8px;">⏱ Отвечаем в течение 24 часов</p>
+    </div>
+    <p style="font-size:11px; color:#888; text-align:center; margin-bottom:15px;">Версия 1.0 • Россия</p>
+    <button class="btn btn-o" onclick="document.getElementById('aboutModal').classList.add('h')">Закрыть</button>
+  </div>
+</div>
+
+<!-- МОДАЛКА: ЧАТ -->
+<div id="chatModal" class="modal h">
+  <div class="mc" style="display:flex; flex-direction:column; height:80vh;">
+    <h2 class="blue-title" style="justify-content:space-between;">
+      <span id="chatTitle">💬 Чат</span>
+      <button onclick="document.getElementById('chatModal').classList.add('h')" style="background:none; border:none; color:#fff; font-size:20px;">✕</button>
+    </h2>
+    <div id="chatMessages" style="flex:1; overflow-y:auto; padding:10px; background:#f8f9ff; border-radius:10px; margin-bottom:10px; display:flex; flex-direction:column; gap:5px;"></div>
+    <div style="display:flex; gap:5px;">
+      <input id="chatInput" type="text" placeholder="Написать сообщение..." style="flex:1; margin:0;">
+      <button class="btn btn-g" onclick="sendMessage()" style="width:auto; margin:0; padding:0 15px;">➤</button>
+    </div>
+  </div>
+</div>
+
+<!-- МОДАЛКА: ОЦЕНКА -->
+<div id="ratingModal" class="modal h">
+  <div class="mc" style="text-align:center;">
+    <h2 class="blue-title" style="justify-content:center;">⭐ Оцените мастера</h2>
+    <p style="font-size:14px; color:#666; margin-bottom:15px;">Как мастер справился с работой?</p>
+    <div id="starsContainer" style="font-size:40px; display:flex; justify-content:center; gap:10px; margin-bottom:20px; cursor:pointer;">
+      <span onclick="setRating(1)" style="color:#ddd;">★</span><span onclick="setRating(2)" style="color:#ddd;">★</span><span onclick="setRating(3)" style="color:#ddd;">★</span><span onclick="setRating(4)" style="color:#ddd;">★</span><span onclick="setRating(5)" style="color:#ddd;">★</span>
+    </div>
+    <button class="btn btn-gold" onclick="submitRating()">Отправить оценку</button>
+    <button class="btn btn-o" onclick="document.getElementById('ratingModal').classList.add('h')">Позже</button>
+  </div>
+</div>
+
+<!-- МОДАЛКА: ОПЛАТА -->
+<div id="paymentModal" class="modal h">
+  <div class="mc" style="text-align:center;">
+    <h2 class="blue-title" style="justify-content:center;">💳 Оплата заказа</h2>
+    <p style="font-size:14px; color:#666; margin-bottom:15px;">Оплатите заказ напрямую мастеру после выполнения работ.</p>
+    <div id="paymentAmount" style="font-size:32px; font-weight:800; color:#3b82f6; margin-bottom:20px;">0 ₽</div>
+    <div id="paymentMasterInfo"></div>
+    <div class="fg" style="text-align:left; background:#f0f8ff; padding:10px; border-radius:10px; border:2px solid #3b82f6; margin-bottom:15px;">
+      <label style="color:#1e40af; font-weight:700; display:flex; align-items:center; gap:5px;">💳 Прямая оплата</label>
+      <p style="font-size:11px; color:#1e40af; margin-top:3px;">Вы переводите деньги напрямую мастеру после выполнения работы.</p>
+    </div>
+    <button class="btn btn-g" onclick="processPayment()" style="background:#10b981; font-size:16px; padding:15px;">✅ Я оплатил</button>
+    <button class="btn btn-o" onclick="document.getElementById('paymentModal').classList.add('h')">Отмена</button>
+  </div>
+</div>
+
+<!-- МОДАЛКА: ПОДТВЕРЖДЕНИЕ -->
+<div id="customConfirmModal" class="modal h">
+  <div class="mc" style="text-align:center;">
+    <div style="font-size:50px; margin-bottom:10px;">⚠️</div>
+    <h2 id="confirmTitle" style="font-size:18px; margin-bottom:15px; color:#333;">Подтверждение</h2>
+    <p id="confirmMessage" style="font-size:14px; color:#666; margin-bottom:20px; line-height:1.5;">Вы уверены?</p>
+    <div style="display:flex; gap:10px;">
+      <button class="btn btn-o" onclick="closeCustomConfirm()" style="flex:1;">Отмена</button>
+      <button class="btn btn-danger" onclick="confirmYes()" style="flex:1;">Да, подтвердить</button>
+    </div>
+  </div>
+</div>
+
+<!-- МОДАЛКА: ВВОД ТЕКСТА -->
+<div id="customPromptModal" class="modal h">
+  <div class="mc" style="text-align:center;">
+    <div style="font-size:50px; margin-bottom:10px;">📝</div>
+    <h2 id="promptTitle" style="font-size:18px; margin-bottom:15px; color:#333;">Введите текст</h2>
+    <textarea id="promptInput" placeholder="Напишите здесь..." style="width:100%; min-height:100px; margin-bottom:20px; padding:10px; border:2px solid #e0e0e0; border-radius:10px; font-size:14px;"></textarea>
+    <div style="display:flex; gap:10px;">
+      <button class="btn btn-o" onclick="closeCustomPrompt()" style="flex:1;">Отмена</button>
+      <button class="btn" onclick="promptSubmit()" style="flex:1; background:#3b82f6;">Отправить</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// --- ДАННЫЕ ---
+const services = [
+  {n:'Уборка', i:`<svg viewBox="0 0 48 48" fill="none"><path d="M14 20l6-12M20 20l-6-12M20 20v16M20 36h8M28 20l4-8M32 20l-4-8M32 20v16M32 36h6" stroke="url(#g1)" stroke-width="2.5" stroke-linecap="round"/><defs><linearGradient id="g1"><stop stop-color="#667eea"/><stop offset="1" stop-color="#764ba2"/></linearGradient></defs></svg>`},
+  {n:'Ремонт', i:`<svg viewBox="0 0 48 48" fill="none"><path d="M30 18l-8 8M34 14a6 6 0 01-8 8l-8 8a4 4 0 11-6-6l8-8a6 6 0 018-8l-4 4 2 2 4-4z" stroke="url(#g2)" stroke-width="2.5"/><defs><linearGradient id="g2"><stop stop-color="#f093fb"/><stop offset="1" stop-color="#f5576c"/></linearGradient></defs></svg>`},
+  {n:'Сантехника', i:`<svg viewBox="0 0 48 48" fill="none"><path d="M24 6c-4 8-10 12-10 18a10 10 0 0020 0c0-6-6-10-10-18z" stroke="url(#g3)" stroke-width="2.5"/><defs><linearGradient id="g3"><stop stop-color="#4facfe"/><stop offset="1" stop-color="#00f2fe"/></linearGradient></defs></svg>`},
+  {n:'Электрика', i:`<svg viewBox="0 0 48 48" fill="none"><path d="M20 4l-8 22h8l-2 18 14-24h-8l4-16H20z" stroke="url(#g4)" stroke-width="2.5"/><defs><linearGradient id="g4"><stop stop-color="#f6d365"/><stop offset="1" stop-color="#fda085"/></linearGradient></defs></svg>`},
+  {n:'Мебель', i:`<svg viewBox="0 0 48 48" fill="none"><path d="M10 24v10h28V24M8 24v-4a4 4 0 014-4h24a4 4 0 014 4v4M14 34v4M34 34v4M12 24h24" stroke="url(#g5)" stroke-width="2.5" stroke-linecap="round"/><defs><linearGradient id="g5"><stop stop-color="#a18cd1"/><stop offset="1" stop-color="#fbc2eb"/></linearGradient></defs></svg>`},
+  {n:'Техника', i:`<svg viewBox="0 0 48 48" fill="none"><rect x="12" y="6" width="24" height="36" rx="4" stroke="url(#g6)" stroke-width="2.5"/><circle cx="24" cy="28" r="8" stroke="url(#g6)" stroke-width="2.5"/><circle cx="24" cy="28" r="3" fill="url(#g6)"/><defs><linearGradient id="g6"><stop stop-color="#8b5cf6"/><stop offset="1" stop-color="#6366f1"/></linearGradient></defs></svg>`},
+  {n:'ПК', i:`<svg viewBox="0 0 48 48" fill="none"><rect x="6" y="10" width="36" height="24" rx="3" stroke="url(#g7)" stroke-width="2.5"/><path d="M18 40h12M24 34v6" stroke="url(#g7)" stroke-width="2.5"/><defs><linearGradient id="g7"><stop stop-color="#43e97b"/><stop offset="1" stop-color="#38f9d7"/></linearGradient></defs></svg>`},
+  {n:'Доставка', i:`<svg viewBox="0 0 48 48" fill="none"><path d="M8 14h4l4 20h20l4-16H14" stroke="url(#g8)" stroke-width="2.5" stroke-linecap="round"/><circle cx="18" cy="40" r="2" fill="url(#g8)"/><circle cx="34" cy="40" r="2" fill="url(#g8)"/><defs><linearGradient id="g8"><stop stop-color="#fa709a"/><stop offset="1" stop-color="#fee140"/></linearGradient></defs></svg>`},
+  {n:'Переезд', i:`<svg viewBox="0 0 48 48" fill="none"><path d="M24 6l18 12v18l-18 6-18-6V18l18-12z" stroke="url(#g9)" stroke-width="2.5"/><path d="M24 6v30M6 18l18 12 18-12" stroke="url(#g9)" stroke-width="2.5"/><defs><linearGradient id="g9"><stop stop-color="#fbc2eb"/><stop offset="1" stop-color="#a6c1ee"/></linearGradient></defs></svg>`},
+  {n:'Участок', i:`<svg viewBox="0 0 48 48" fill="none"><path d="M24 42V20M24 20c-6 0-10-4-10-10 6 0 10 4 10 10zm0 0c6 0 10-4 10-10-6 0-10 4-10 10z" stroke="url(#g10)" stroke-width="2.5"/><defs><linearGradient id="g10"><stop stop-color="#84fab0"/><stop offset="1" stop-color="#8fd3f4"/></linearGradient></defs></svg>`},
+  {n:'Авто', i:`<svg viewBox="0 0 48 48" fill="none"><path d="M10 32h28v-8l-4-10a2 2 0 00-2-1H16a2 2 0 00-2 1l-4 10v8z" stroke="url(#g11)" stroke-width="2.5"/><circle cx="16" cy="34" r="3" stroke="url(#g11)" stroke-width="2.5" fill="none"/><circle cx="32" cy="34" r="3" stroke="url(#g11)" stroke-width="2.5" fill="none"/><defs><linearGradient id="g11"><stop stop-color="#06b6d4"/><stop offset="1" stop-color="#0891b2"/></linearGradient></defs></svg>`}
+];
+
+let selectedService = null;
+let map, marker;
+let faceStream = null;
+let isFaceVerified = false;
+let soundEnabled = true;
+let masterMarkers = [];
+let addrTimer = null;
+let selectedTime = 'Скоро';
+let currentChatOrderId = null;
+let currentRating = 0;
+let ratingOrderId = null;
+let confirmCallback = null;
+let promptCallback = null;
+let currentOrderTab = 'active';
+let currentAuthAvatar = null;
+let currentOrderId = null;
+let coords = {lat: 55.75, lng: 37.61}; // Дефолтные координаты (Москва)
+
+// --- ТОСТЫ ---
+function showToast(message, type = 'info') {
+  let container = document.querySelector('.toast-container');
+  if (!container) { container = document.createElement('div'); container.className = 'toast-container'; document.body.appendChild(container); }
+  const toast = document.createElement('div'); toast.className = `toast ${type}`;
+  let icon = 'ℹ️'; if (type === 'success') icon = '✅'; if (type === 'error') icon = '❌'; if (type === 'warning') icon = '⚠️';
+  toast.innerHTML = `<span>${icon}</span> <span>${message}</span>`;
+  container.appendChild(toast);
+  setTimeout(() => { toast.classList.add('hide'); setTimeout(() => toast.remove(), 300); }, 2500);
+}
+window.alert = function(msg) { showToast(msg, 'info'); };
+
+// --- КАСТОМНЫЕ ОКНА ---
+function showConfirm(title, message, onYes) { document.getElementById('confirmTitle').textContent = title; document.getElementById('confirmMessage').textContent = message; confirmCallback = onYes; document.getElementById('customConfirmModal').classList.remove('h'); }
+function closeCustomConfirm() { document.getElementById('customConfirmModal').classList.add('h'); confirmCallback = null; }
+function confirmYes() { if (confirmCallback) confirmCallback(); closeCustomConfirm(); }
+function showPrompt(title, placeholder, onSubmit) { document.getElementById('promptTitle').textContent = title; document.getElementById('promptInput').value = ''; document.getElementById('promptInput').placeholder = placeholder; promptCallback = onSubmit; document.getElementById('customPromptModal').classList.remove('h'); }
+function closeCustomPrompt() { document.getElementById('customPromptModal').classList.add('h'); promptCallback = null; }
+function promptSubmit() { const value = document.getElementById('promptInput').value.trim(); if (!value) { showToast('Введите текст', 'warning'); return; } if (promptCallback) promptCallback(value); closeCustomPrompt(); }
+
+// --- ЗВУК ---
+function playSound() {
+  if (!soundEnabled) return;
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator(); const gain = ctx.createGain();
+    osc.type = 'sine'; osc.frequency.setValueAtTime(600, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(300, ctx.currentTime + 0.1);
+    gain.gain.setValueAtTime(0.1, ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+    osc.connect(gain); gain.connect(ctx.destination); osc.start(); osc.stop(ctx.currentTime + 0.1);
+  } catch (e) {}
+}
+
+// --- КАРТА ---
+function initMap() {
+  if (map) return;
+  map = L.map('map', {center: [60, 90], zoom: 3, minZoom: 2, maxZoom: 18, attributionControl: false}).setView([60, 90], 3);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+  marker = L.marker([55.75, 37.61], {draggable: true}).addTo(map);
+  marker.on('dragend', function() { coords = marker.getLatLng(); updateAddressFromMap(coords.lat, coords.lng); });
+  map.on('click', function(e) { coords = e.latlng; marker.setLatLng(coords); updateAddressFromMap(coords.lat, coords.lng); });
+  updateMasterMarkers();
+}
+
+function updateAddressFromMap(lat, lng) {
+  const addrInput = document.getElementById('addr');
+  addrInput.value = 'Определяем адрес...';
+  fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=ru`)
+    .then(res => res.json()).then(data => {
+      if (data.display_name) addrInput.value = data.display_name.split(', ').slice(0, 4).join(', ');
+      else addrInput.value = 'Адрес не найден';
+    }).catch(() => addrInput.value = 'Ошибка определения');
+}
+
+function manualAddressInput(value) {
+  clearTimeout(addrTimer);
+  if (value.length < 3) return;
+  addrTimer = setTimeout(() => {
+    fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(value)}&limit=1&accept-language=ru`)
+      .then(res => res.json()).then(data => {
+        if (data && data.length > 0) {
+          const lat = parseFloat(data[0].lat); const lng = parseFloat(data[0].lon);
+          if (map && marker) { map.setView([lat, lng], 14); marker.setLatLng([lat, lng]); coords = {lat: lat, lng: lng}; }
+        }
+      }).catch(() => {});
+  }, 800);
+}
+
+function goToMyLocation() {
+  if (!navigator.geolocation) return showToast('Ваш браузер не поддерживает геолокацию', 'error');
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      const lat = position.coords.latitude, lng = position.coords.longitude;
+      if (map) { map.setView([lat, lng], 15); marker.setLatLng([lat, lng]); coords = {lat: lat, lng: lng}; updateAddressFromMap(lat, lng); }
+    },
+    () => showToast('Не удалось получить ваше местоположение.', 'error')
+  );
+}
+
+function focusMap() { if (map) map.invalidateSize(); }
+
+// --- МАСТЕРА НА КАРТЕ ---
+function toggleMapVisibility(checkbox) {
+  const isEnabled = checkbox.checked;
+  if (isEnabled) {
+    if (navigator.geolocation) {
+      if (window.masterWatchId) navigator.geolocation.clearWatch(window.masterWatchId);
+      window.masterWatchId = navigator.geolocation.watchPosition(
+        (position) => {
+          const lat = position.coords.latitude, lng = position.coords.longitude;
+          localStorage.setItem('master_visible', 'true'); localStorage.setItem('master_lat', lat); localStorage.setItem('master_lng', lng);
+          if (map) updateMasterMarkers();
+        },
+        () => showToast('Не удалось получить геолокацию.', 'error'),
+        { enableHighAccuracy: true, maximumAge: 10000, timeout: 5000 }
+      );
+      showToast('✅ Теперь заказчики видят вас на карте!', 'success');
+    } else { showToast('Геолокация не поддерживается', 'error'); checkbox.checked = false; }
+  } else {
+    if (window.masterWatchId) { navigator.geolocation.clearWatch(window.masterWatchId); window.masterWatchId = null; }
+    localStorage.removeItem('master_visible'); localStorage.removeItem('master_lat'); localStorage.removeItem('master_lng');
+    showToast('❌ Вы больше не видны на карте.', 'info');
+    if (map) updateMasterMarkers();
+  }
+}
+
+function updateMasterMarkers() {
+  if (!map) return;
+  masterMarkers.forEach(m => map.removeLayer(m)); masterMarkers = [];
+  const isVisible = localStorage.getItem('master_visible') === 'true';
+  const lat = localStorage.getItem('master_lat'); const lng = localStorage.getItem('master_lng');
+  if (isVisible && lat && lng) {
+    const masterIcon = L.divIcon({ className: 'custom-master-icon', html: `<div style="position:relative; width:24px; height:24px;"><div style="position:absolute; inset:0; background:rgba(40, 167, 69, 0.4); border-radius:50%; animation: pulse 1.5s infinite;"></div><div style="position:absolute; inset:4px; background:#28a745; border:2px solid #fff; border-radius:50%; box-shadow:0 2px 6px rgba(0,0,0,0.4);"></div></div>`, iconSize: [24, 24], iconAnchor: [12, 12] });
+    const marker = L.marker([parseFloat(lat), parseFloat(lng)], {icon: masterIcon}).addTo(map);
+    marker.bindPopup("🛠 Мастер (готов к работе)");
+    masterMarkers.push(marker);
+  }
+}
+
+// --- УСЛУГИ ---
+function renderServices() {
+  document.getElementById('svc').innerHTML = services.map(s => `<div class="service" onclick="pick('${s.n}', this)"><div class="icon">${s.i}</div><div class="name">${s.n}</div></div>`).join('');
+}
+function pick(name, el) {
+  selectedService = name;
+  document.querySelectorAll('.service').forEach(s => s.classList.remove('selected'));
+  el.classList.add('selected');
+  playSound();
+}
+
+// --- ВКЛАДКИ ---
+function st(tab) {
+  playSound();
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  const activeTab = document.querySelector(`.tab[onclick="st('${tab}')"]`);
+  if(activeTab) activeTab.classList.add('active');
+  document.querySelectorAll('[id^="tab-"]').forEach(c => c.classList.add('h'));
+  document.getElementById('tab-' + tab).classList.remove('h');
+  if (tab === 'my') renderOrders();
+  if (tab === 'new') setTimeout(initMap, 100);
+  if (tab === 'cab') checkMasterCabinet();
+}
+
+function switchOrderTab(tab, btn) {
+  currentOrderTab = tab;
+  document.getElementById('btnActiveOrders').classList.remove('active');
+  document.getElementById('btnHistoryOrders').classList.remove('active');
+  btn.classList.add('active');
+  renderOrders();
+}
+
+// --- ВРЕМЯ ---
+function pickTime(value, btn) {
+  document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  selectedTime = value;
+  document.getElementById('exactTimeBox').classList.add('h');
+  playSound();
+}
+function toggleExactTime() {
+  const box = document.getElementById('exactTimeBox');
+  box.classList.toggle('h');
+  if (!box.classList.contains('h')) {
+    document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active'));
+    selectedTime = 'exact';
+    if (!document.getElementById('exactDate').value) document.getElementById('exactDate').value = new Date().toISOString().split('T')[0];
+  }
+}
+function getFinalTime() {
+  if (selectedTime === 'exact') {
+    const date = document.getElementById('exactDate').value; const time = document.getElementById('exactTime').value;
+    if (!date || !time) return 'Скоро';
+    return `${date} в ${time}`;
+  }
+  return selectedTime;
+}
+
+// --- ОБНОВЛЕНИЕ ВРЕМЕНИ ---
+function updateTimeGreeting() {
+  const now = new Date();
+  const hours = now.getHours();
+  const timeStr = now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+  const dateStr = now.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+  let greeting = 'Добрый день!';
+  if (hours >= 5 && hours < 12) greeting = 'Доброе утро!';
+  else if (hours >= 12 && hours < 18) greeting = 'Добрый день!';
+  else if (hours >= 18 && hours < 23) greeting = 'Добрый вечер!';
+  else greeting = 'Доброй ночи!';
+  const elGreeting = document.getElementById('greetingText');
+  const elDate = document.getElementById('currentDate');
+  const elTime = document.getElementById('currentTime');
+  if (elGreeting) elGreeting.textContent = greeting;
+  if (elDate) elDate.textContent = dateStr;
+  if (elTime) elTime.textContent = timeStr;
+}
+setInterval(updateTimeGreeting, 1000);
+
+// --- ФОТО ---
+function choosePhotoSource(type) {
+  document.getElementById('photoSourceModal').classList.add('h');
+  if (type === 'camera') document.getElementById('phCamera').click();
+  else document.getElementById('phGallery').click();
+}
+function handlePhotos(event) {
+  const files = event.target.files; const previewBox = document.getElementById('photoPreview');
+  if (files && files.length > 0) {
+    Array.from(files).forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (e) => { const img = document.createElement('img'); img.src = e.target.result; previewBox.appendChild(img); };
+      reader.readAsDataURL(file);
+    });
+  }
+  event.target.value = '';
+}
+
+// --- АВАТАРКА ---
+function handleAuthAvatar(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    currentAuthAvatar = e.target.result;
+    const preview = document.getElementById('authAvatarPreview');
+    preview.style.backgroundImage = `url(${currentAuthAvatar})`;
+    preview.innerHTML = '';
+    preview.style.color = 'transparent';
+    playSound();
+  };
+  reader.readAsDataURL(file);
+  event.target.value = '';
+}
+
+// --- СОЗДАНИЕ ЗАКАЗА ---
+function createOrder() {
+  const user = JSON.parse(localStorage.getItem('pg_user') || 'null');
+  if (!user) { showToast('Войдите в аккаунт', 'warning'); return; }
+  if (user.role === 'executor') { showToast('Мастера не могут создавать заказы.', 'error'); return; }
+  if (!selectedService) return showToast('Выберите услугу', 'error');
+  const addr = document.getElementById('addr').value;
+  if (!addr || addr === 'Определяем адрес...') return showToast('Укажите адрес на карте', 'error');
+  const price = document.getElementById('pr').value;
+  if (price > 20000) { showToast('⚠️ Заказ на сумму более 20 000 ₽ требует проверки по паспорту мастера.', 'warning'); return; }
+
+  const isUrgent = document.getElementById('isUrgent').checked;
+  const order = { id: Date.now(), user_id: user.id || 1, service: selectedService, address: addr, price: price || 'договорная', time: getFinalTime(), status: 'new', isUrgent: isUrgent, timestamp: Date.now(), lat: coords.lat, lng: coords.lng };
+  const orders = JSON.parse(localStorage.getItem('pg_orders') || '[]');
+  orders.unshift(order); localStorage.setItem('pg_orders', JSON.stringify(orders));
+  showToast('Заказ на ' + selectedService + ' создан!', 'success');
+  
+  if (Notification.permission === 'granted' && navigator.serviceWorker) {
+    navigator.serviceWorker.ready.then(reg => { reg.showNotification('Новый заказ!', { body: `Услуга: ${selectedService}. Цена: ${price} ₽`, icon: 'icon-192.png' }); });
+  }
+
+  document.getElementById('addr').value = ''; document.getElementById('pr').value = ''; document.getElementById('cm').value = ''; document.getElementById('photoPreview').innerHTML = '';
+  document.querySelectorAll('.service').forEach(s => s.classList.remove('selected')); selectedService = null;
+  st('my');
+}
+
+// --- СПИСОК ЗАКАЗОВ ---
+function renderOrders() {
+  const box = document.getElementById('list');
+  let allOrders = JSON.parse(localStorage.getItem('pg_orders') || '[]');
+  let orders = allOrders.filter(o => {
+    if (currentOrderTab === 'active') return o.status === 'new' || o.status === 'in_progress';
+    else return o.status === 'done' || o.status === 'cancelled';
+  });
+  const user = JSON.parse(localStorage.getItem('pg_user') || 'null');
+  
+  if (!orders.length) { box.innerHTML = '<div style="text-align:center;color:#999;padding:20px">📭 Заказов пока нет</div>'; return; }
+
+  box.innerHTML = orders.map(o => {
+    let actions = '';
+    let ratingDisplay = o.rating ? `<span style="color:#fbbf24; margin-left:5px;">★ ${o.rating}</span>` : '';
+    let paymentBadge = '';
+    if (o.payment_status === 'paid') paymentBadge = `<span style="font-size:10px; background:#d1fae5; color:#065f46; padding:2px 6px; border-radius:10px; margin-left:5px; font-weight:bold;">✅ Оплачено</span>`;
+    
+    let masterInfo = '';
+    if (o.master_name && o.master_avatar) {
+      masterInfo = `<div style="display:flex; align-items:center; gap:5px; margin-bottom:5px; font-size:11px; color:#666;"><div style="width:20px; height:20px; border-radius:50%; background-image:url(${o.master_avatar}); background-size:cover; background-position:center; border:1px solid #ccc;"></div> Мастер: ${o.master_name}</div>`;
+    } else if (o.master_name) {
+      masterInfo = `<div style="font-size:11px; color:#666; margin-bottom:5px;">Мастер: ${o.master_name}</div>`;
+    }
+
+    if (user && user.role === 'executor') {
+      if (o.status === 'new') actions = `<button class="btn btn-sm btn-g" onclick="event.stopPropagation(); acceptOrder(${o.id})" style="background:#28a745; color:white; border:none; padding:8px 12px; border-radius:8px; font-weight:bold; margin-right:5px;">✅ Принять</button><button class="btn btn-sm btn-warning" onclick="event.stopPropagation(); refuseOrder(${o.id})" style="background:#f59e0b; color:white; border:none; padding:8px 12px; border-radius:8px; font-weight:bold;">❌ Отказ</button>`;
+      else if (o.status === 'in_progress') actions = `<span class="st st-in_progress" style="margin-right:5px;">Вы приняли</span><button class="btn btn-sm" onclick="event.stopPropagation(); openChat(${o.id})" style="background:#8b5cf6; color:white; border:none; padding:8px 12px; border-radius:8px; font-weight:bold; margin-right:5px;">💬 Чат</button><button class="btn btn-sm btn-danger" onclick="event.stopPropagation(); cancelByMaster(${o.id})" style="background:#ef4444; color:white; border:none; padding:8px 12px; border-radius:8px; font-weight:bold;">❌ Отказаться</button>`;
+    } else if (user && user.role === 'client') {
+      if (o.status === 'new') actions = `<button class="btn btn-sm btn-warning" onclick="event.stopPropagation(); cancelOrder(${o.id})" style="background:#f59e0b; color:white; border:none; padding:8px 12px; border-radius:8px; font-weight:bold;">↩️ Отменить</button>`;
+      else if (o.status === 'in_progress') actions = `<button class="btn btn-sm btn-g" onclick="event.stopPropagation(); openRatingModal(${o.id})" style="background:#3b82f6; color:white; border:none; padding:8px 12px; border-radius:8px; font-weight:bold; margin-right:5px;">🏁 Завершить</button><button class="btn btn-sm" onclick="event.stopPropagation(); openChat(${o.id})" style="background:#8b5cf6; color:white; border:none; padding:8px 12px; border-radius:8px; font-weight:bold;">💬 Чат</button>`;
+      else if (o.status === 'done') {
+        if (o.payment_status !== 'paid') {
+          actions = `<button class="btn btn-sm btn-g" onclick="event.stopPropagation(); openPaymentModal(${o.id})" style="background:#10b981; color:white; border:none; padding:8px 12px; border-radius:8px; font-weight:bold; margin-right:5px;">💳 Оплатить</button>`;
+        } else {
+          actions = `<span class="st st-done" style="margin-right:5px;">✅ Оплачено</span>`;
+        }
+        actions += `<button class="btn btn-sm btn-danger" onclick="event.stopPropagation(); deleteOrder(${o.id})" style="background:#ef4444; color:white; border:none; padding:8px 12px; border-radius:8px; font-weight:bold;">🗑 Удалить</button>`;
+      } else if (o.status === 'cancelled') actions = `<button class="btn btn-sm btn-danger" onclick="event.stopPropagation(); deleteOrder(${o.id})" style="background:#ef4444; color:white; border:none; padding:8px 12px; border-radius:8px; font-weight:bold;">🗑 Удалить</button>`;
+    }
+
+    return `<div class="oi" onclick="openOrderMap(${o.id})">${masterInfo}<h4>${o.isUrgent ? '<span style="color:#dc2626; font-weight:900;">⚡ СРОЧНО </span>' : ''}${o.service} — ${o.price} ₽ ${ratingDisplay} ${paymentBadge}</h4><p>📍 ${o.address}</p><p>⏰ ${o.time}</p><div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px; flex-wrap:wrap; gap:5px;"><span class="st st-${o.status || 'new'}">${getStatusText(o.status)}</span><div>${actions}</div></div></div>`;
+  }).join('');
+}
+
+function getStatusText(status) { const map = { 'new': 'Ждёт откликов', 'in_progress': 'В работе', 'cancelled': 'Отменен', 'done': 'Выполнен' }; return map[status] || 'Ждёт откликов'; }
+function cancelOrder(id) { showConfirm('Отмена', 'Отменить этот заказ?', () => { const orders = JSON.parse(localStorage.getItem('pg_orders') || '[]'); const index = orders.findIndex(o => o.id === id); if (index !== -1) { orders[index].status = 'cancelled'; localStorage.setItem('pg_orders', JSON.stringify(orders)); renderOrders(); } }); }
+function deleteOrder(id) { showConfirm('Удаление', 'Удалить заказ навсегда?', () => { let orders = JSON.parse(localStorage.getItem('pg_orders') || '[]'); orders = orders.filter(o => o.id !== id); localStorage.setItem('pg_orders', JSON.stringify(orders)); renderOrders(); }); }
+function acceptOrder(id) { 
+  showConfirm('Принять заказ?', 'Вы уверены, что хотите взять этот заказ в работу?', () => { 
+    const orders = JSON.parse(localStorage.getItem('pg_orders') || '[]'); 
+    const index = orders.findIndex(o => o.id === id); 
+    if (index !== -1) { 
+      const user = JSON.parse(localStorage.getItem('pg_user') || 'null');
+      
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            orders[index].master_lat = pos.coords.latitude;
+            orders[index].master_lng = pos.coords.longitude;
+            updateOrderAndRender(orders, index, user, id);
+          },
+          () => {
+            orders[index].master_lat = orders[index].lat; 
+            orders[index].master_lng = orders[index].lng;
+            updateOrderAndRender(orders, index, user, id);
+          }
+        );
+      } else {
+        orders[index].master_lat = orders[index].lat;
+        orders[index].master_lng = orders[index].lng;
+        updateOrderAndRender(orders, index, user, id);
+      }
+    } 
+  }); 
+}
+
+function updateOrderAndRender(orders, index, user, id) {
+  orders[index].status = 'in_progress';
+  orders[index].master_name = user.name;
+  orders[index].master_avatar = user.avatar || null;
+  orders[index].master_phone = user.phone;
+  localStorage.setItem('pg_orders', JSON.stringify(orders));
+  renderOrders();
+  showToast('✅ Вы приняли заказ!', 'success');
+}
+
+function refuseOrder(id) { showConfirm('Отказаться?', 'Вы уверены, что хотите отказаться?', () => { showToast('Вы отказались от заказа', 'info'); }); }
+function cancelByMaster(id) {
+  showConfirm('Отказаться от заказа?', 'Заказ вернется в общий список. Укажите причину.', () => {
+    showPrompt('Причина отказа', 'Например: срочно уехал, заболел...', (reason) => {
+      const orders = JSON.parse(localStorage.getItem('pg_orders') || '[]');
+      const index = orders.findIndex(o => o.id === id);
+      if (index !== -1) {
+        orders[index].status = 'new'; orders[index].cancel_reason = reason;
+        localStorage.setItem('pg_orders', JSON.stringify(orders)); renderOrders();
+        showToast('Вы отказались от заказа', 'info');
+      }
+    });
+  });
+}
+
+// --- ЧАТ ---
+function openChat(orderId) {
+  currentChatOrderId = orderId;
+  const orders = JSON.parse(localStorage.getItem('pg_orders') || '[]'); const order = orders.find(o => o.id === orderId);
+  if (order) { document.getElementById('chatTitle').textContent = `💬 Чат: ${order.service}`; loadMessages(orderId); document.getElementById('chatModal').classList.remove('h'); }
+}
+function loadMessages(orderId) {
+  const chatBox = document.getElementById('chatMessages'); const messages = JSON.parse(localStorage.getItem(`chat_${orderId}`) || '[]'); const user = JSON.parse(localStorage.getItem('pg_user') || 'null');
+  const orders = JSON.parse(localStorage.getItem('pg_orders') || '[]'); const order = orders.find(o => o.id === orderId);
+  
+  if (messages.length === 0) { chatBox.innerHTML = '<div style="text-align:center; color:#999; font-size:12px; margin-top:20px;">Сообщений пока нет.</div>'; return; }
+  
+  chatBox.innerHTML = messages.map(m => {
+    const isMe = m.sender === user.name;
+    let roleText = m.role === 'executor' ? ' (Мастер)' : ' (Заказчик)';
+    let avatarUrl = '';
+    if (m.role === 'executor' && order && order.master_avatar) avatarUrl = order.master_avatar;
+    let avatarHtml = avatarUrl ? `<div style="width:24px; height:24px; border-radius:50%; background-image:url(${avatarUrl}); background-size:cover; border:1px solid #fff; margin-right:5px;"></div>` : '';
+
+    return `<div class="chat-bubble ${isMe ? 'chat-me' : 'chat-other'}" style="display:flex; align-items:flex-end; gap:5px; flex-direction:${isMe ? 'row-reverse' : 'row'};">
+      ${avatarHtml}
+      <div>
+        <div style="font-size:10px; font-weight:bold; opacity:0.8; margin-bottom:3px; color: ${isMe ? '#fff' : '#3b82f6'}; text-align:${isMe ? 'right' : 'left'};">${m.sender}${roleText}</div>
+        <div>${m.text}</div>
+        <div class="chat-time">${m.time}</div>
+      </div>
+    </div>`;
+  }).join('');
+  chatBox.scrollTop = chatBox.scrollHeight;
+}
+function sendMessage() {
+  const input = document.getElementById('chatInput'); const text = input.value.trim(); if (!text || !currentChatOrderId) return;
+  const user = JSON.parse(localStorage.getItem('pg_user') || 'null'); const messages = JSON.parse(localStorage.getItem(`chat_${currentChatOrderId}`) || '[]');
+  messages.push({ sender: user.name, role: user.role, text: text, time: new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }) });
+  localStorage.setItem(`chat_${currentChatOrderId}`, JSON.stringify(messages)); input.value = ''; loadMessages(currentChatOrderId); playSound();
+}
+
+// --- РЕЙТИНГ ---
+function openRatingModal(orderId) { ratingOrderId = orderId; currentRating = 0; updateStars(0); document.getElementById('ratingModal').classList.remove('h'); }
+function setRating(val) { currentRating = val; updateStars(val); playSound(); }
+function updateStars(val) { document.querySelectorAll('#starsContainer span').forEach((star, index) => { star.style.color = index < val ? '#fbbf24' : '#ddd'; }); }
+function submitRating() {
+  if (currentRating === 0) { showToast('Поставьте оценку', 'warning'); return; }
+  const orders = JSON.parse(localStorage.getItem('pg_orders') || '[]'); const orderIndex = orders.findIndex(o => o.id === ratingOrderId);
+  if (orderIndex !== -1) { 
+    orders[orderIndex].rating = currentRating; 
+    orders[orderIndex].status = 'done'; 
+    showToast(`⭐ Спасибо! Вы поставили ${currentRating} звезд.`, 'success'); 
+    localStorage.setItem('pg_orders', JSON.stringify(orders)); 
+    document.getElementById('ratingModal').classList.add('h'); 
+    renderOrders(); 
+  }
+}
+
+// --- ОПЛАТА ---
+function openPaymentModal(orderId) {
+  const orders = JSON.parse(localStorage.getItem('pg_orders') || '[]'); 
+  const order = orders.find(o => o.id === orderId);
+  
+  if (order) { 
+    document.getElementById('paymentAmount').textContent = order.price + ' ₽'; 
+    
+    let masterInfo = '';
+    if (order.master_name && order.master_phone) {
+      masterInfo = `
+        <div style="background:#f8f9ff; border-radius:10px; padding:10px; margin-bottom:15px; text-align:left;">
+          <p style="font-size:12px; color:#666; margin-bottom:5px;">Перевод для мастера:</p>
+          <p style="font-size:14px; font-weight:700; color:#333;">${order.master_name}</p>
+          <p style="font-size:13px; color:#3b82f6; font-weight:700;">📞 ${order.master_phone}</p>
+        </div>
+      `;
+    }
+    
+    document.getElementById('paymentMasterInfo').innerHTML = masterInfo;
+    
+    document.getElementById('paymentModal').classList.remove('h'); 
+    currentOrderId = orderId; 
+  }
+}
+
+function processPayment() {
+  if (!currentOrderId) return;
+  const orders = JSON.parse(localStorage.getItem('pg_orders') || '[]'); 
+  const index = orders.findIndex(o => o.id === currentOrderId);
+  
+  if (index !== -1) { 
+    orders[index].payment_status = 'paid'; 
+    localStorage.setItem('pg_orders', JSON.stringify(orders)); 
+    showToast('✅ Оплата прошла успешно!', 'success'); 
+    document.getElementById('paymentModal').classList.add('h'); 
+    renderOrders(); 
+  }
+}
+
+// --- МОДАЛКИ ---
+function openAuth() { currentAuthAvatar = null; const preview = document.getElementById('authAvatarPreview'); preview.style.backgroundImage = 'none'; preview.innerHTML = '👤'; preview.style.color = '#fff'; document.getElementById('authAvatarInput').value = ''; document.getElementById('authModal').classList.remove('h'); }
+function openSettings() { document.getElementById('settingsModal').classList.remove('h'); }
+function openAbout() { document.getElementById('aboutModal').classList.remove('h'); }
+function openSubModal() { document.getElementById('subModal').classList.remove('h'); }
+
+// --- ВХОД ---
+function selectRole(role) {
+  const btnClient = document.getElementById('btnRoleClient'); const btnExecutor = document.getElementById('btnRoleExecutor'); const select = document.getElementById('authRole');
+  select.value = role;
+  if (role === 'client') { btnClient.classList.add('active'); btnExecutor.classList.remove('active'); } else { btnExecutor.classList.add('active'); btnClient.classList.remove('active'); }
+  toggleMasterFields();
+  playSound();
+}
+
+function toggleMasterFields() { const role = document.getElementById('authRole').value; document.getElementById('masterFields').classList.toggle('h', role !== 'executor'); }
+function togglePasswordVisibility() {
+  const input = document.getElementById('authPassword'); const btn = document.getElementById('eyeBtn');
+  if (input.type === 'password') { input.type = 'text'; btn.textContent = '🙈'; } else { input.type = 'password'; btn.textContent = '👁️'; }
+  playSound();
+}
+function sendSmsCode() { showToast('📱 SMS с кодом отправлено (демо: введите 1234)', 'info'); }
+function login() {
+  const name = document.getElementById('authName').value.trim(); const phone = document.getElementById('authPhone').value.trim(); const password = document.getElementById('authPassword').value.trim(); const sms = document.getElementById('smsCode').value.trim(); const role = document.getElementById('authRole').value;
+  if (!name || !phone) return showToast('Введите имя и телефон', 'error'); if (!password || password.length < 4) return showToast('Введите пароль (мин 4)', 'error'); if (sms !== '1234') return showToast('Неверный SMS-код', 'error'); if (role === 'executor' && !isFaceVerified) return showToast('❌ Мастер обязан пройти проверку лица!', 'error');
+  const user = { name, phone, password, role, verified: (role === 'executor'), avatar: currentAuthAvatar }; localStorage.setItem('pg_user', JSON.stringify(user));
+  document.getElementById('authModal').classList.add('h'); showToast('✅ Вы вошли как ' + name, 'success'); ui();
+}
+function logout() { showConfirm('Выход', 'Вы уверены, что хотите выйти?', () => { localStorage.removeItem('pg_user'); showToast('Вы вышли', 'info'); setTimeout(() => location.reload(), 1000); }); }
+
+// --- ИНТЕРФЕЙС ---
+function ui() {
+  const loginBtn = document.getElementById('loginBtn'); const logoutBtn = document.getElementById('logoutBtn'); const userBadge = document.getElementById('userBadge'); const userNameDisplay = document.getElementById('userNameDisplay'); const userRoleDisplay = document.getElementById('userRoleDisplay'); const headerAvatar = document.getElementById('headerAvatar');
+  const tabNew = document.querySelector('.tab[onclick="st(\'new\')"]'); const tabCab = document.getElementById('cabTab');
+  const user = JSON.parse(localStorage.getItem('pg_user') || 'null');
+  
+  if (user) {
+    loginBtn.classList.add('h'); logoutBtn.classList.remove('h'); userBadge.style.display = 'inline-flex'; userNameDisplay.textContent = user.name;
+    
+    if (user.avatar) { headerAvatar.style.display = 'block'; headerAvatar.style.backgroundImage = `url(${user.avatar})`; } else { headerAvatar.style.display = 'none'; }
+    
+    if (user.role === 'executor') {
+      userRoleDisplay.textContent = 'Мастер'; userRoleDisplay.style.color = '#d97706'; tabNew.style.display = 'none'; tabCab.classList.remove('h'); checkMasterCabinet(); st('cab');
+    } else {
+      userRoleDisplay.textContent = 'Заказчик'; userRoleDisplay.style.color = '#3b82f6'; tabNew.style.display = 'block'; tabCab.classList.add('h'); st('new');
+    }
+  } else {
+    loginBtn.classList.remove('h'); logoutBtn.classList.add('h'); userBadge.style.display = 'none'; tabNew.style.display = 'block'; tabCab.classList.add('h'); st('new');
+  }
+}
+function checkMasterCabinet() {
+  const user = JSON.parse(localStorage.getItem('pg_user') || 'null'); const masterPanel = document.getElementById('masterPanel'); const notMasterMsg = document.getElementById('notMasterMessage');
+  if (user && user.role === 'executor') {
+    masterPanel.classList.remove('h'); notMasterMsg.classList.add('h'); updateMasterStats();
+    if (localStorage.getItem('master_visible') === 'true') { const toggle = document.getElementById('showOnMapToggle'); if (toggle) toggle.checked = true; }
+  } else { masterPanel.classList.add('h'); notMasterMsg.classList.remove('h'); }
+}
+
+// --- СТАТИСТИКА МАСТЕРА ---
+function updateMasterStats() {
+  const user = JSON.parse(localStorage.getItem('pg_user') || 'null'); if (!user || user.role !== 'executor') return;
+  const orders = JSON.parse(localStorage.getItem('pg_orders') || '[]');
+  const doneOrders = orders.filter(o => o.status === 'done');
+  const totalEarned = doneOrders.reduce((sum, o) => sum + (parseInt(String(o.price).replace(/\D/g, '')) || 0), 0);
+  const ratedOrders = doneOrders.filter(o => o.rating);
+  const avgRating = ratedOrders.length > 0 ? (ratedOrders.reduce((sum, o) => sum + o.rating, 0) / ratedOrders.length).toFixed(1) : '0.0';
+  const responsesCount = orders.filter(o => o.status === 'new' || o.status === 'in_progress').length;
+  document.getElementById('statCompleted').textContent = doneOrders.length;
+  document.getElementById('statEarned').textContent = totalEarned.toLocaleString('ru-RU') + ' ₽';
+  document.getElementById('statRating').textContent = avgRating;
+  document.getElementById('statResponses').textContent = responsesCount;
+}
+
+// --- СЕЛФИ ---
+async function startFaceCheck() { document.getElementById('faceCheckModal').classList.remove('h'); try { faceStream = await navigator.mediaDevices.getUserMedia({video: true}); document.getElementById('faceVideo').srcObject = faceStream; } catch (e) { showToast('Нет доступа к камере', 'error'); document.getElementById('faceCheckModal').classList.add('h'); } }
+function captureFace() { isFaceVerified = true; document.getElementById('faceStatus').textContent = '✅ Проверен'; document.getElementById('faceStatus').style.color = '#28a745'; if (faceStream) faceStream.getTracks().forEach(t => t.stop()); document.getElementById('faceCheckModal').classList.add('h'); showToast('Селфи сделано!', 'success'); }
+function cancelFaceCheck() { if (faceStream) faceStream.getTracks().forEach(t => t.stop()); document.getElementById('faceCheckModal').classList.add('h'); }
+
+// --- ПОДПИСКА ---
+function selectTariff(type, el) { document.querySelectorAll('.tariff-option').forEach(o => o.classList.remove('selected')); el.classList.add('selected'); }
+function paySubscription() { showToast('💳 Подписка «Про» активирована на 7 дней бесплатно!', 'success'); document.getElementById('subModal').classList.add('h'); }
+
+// --- НАСТРОЙКИ ---
+function toggleSound(el) { soundEnabled = el.checked; showToast(el.checked ? '🔊 Звук вкл' : '🔇 Звук выкл', 'info'); }
+function toggleChatSound(el) { showToast(el.checked ? '🔔 Чат вкл' : '🔕 Чат выкл', 'info'); }
+function setTheme(theme) { document.body.classList.toggle('dark', theme === 'dark'); localStorage.setItem('pg_theme', theme); }
+function requestPush() { if (!('Notification' in window)) { showToast('Браузер не поддерживает', 'error'); return; } Notification.requestPermission().then(permission => { if (permission === 'granted') { showToast('✅ Push включены!', 'success'); if (navigator.serviceWorker) navigator.serviceWorker.ready.then(reg => reg.showNotification('Помогатор', { body: 'Уведомления подключены!', icon: 'icon-192.png' })); } else showToast('Вы отклонили', 'info'); }); }
+
+// --- ПОЛИТИКА И УДАЛЕНИЕ ---
+function openPrivacy() {
+  const modal = document.createElement('div'); modal.id = 'privacyModal'; modal.className = 'modal';
+  modal.innerHTML = `<div class="mc"><h2 class="blue-title" style="justify-content:center">🔒 Политика</h2><div style="font-size:13px; color:#555; line-height:1.5; max-height:50vh; overflow-y:auto; margin-bottom:15px; text-align:left;"><p style="margin-bottom:8px"><b>1. Собираем:</b> Имя, телефон, адрес, геолокация, фото.</p><p style="margin-bottom:8px"><b>2. Используем:</b> Для связи и выполнения услуг. Данные видны только мастерам, откликнувшимся на заказ.</p><p style="margin-bottom:8px"><b>3. Согласие:</b> Нажимая «Войти», вы соглашаетесь с 152-ФЗ.</p><p style="margin-bottom:8px"><b>4. Хранение:</b> На защищенных серверах РФ.</p><p style="margin-bottom:8px"><b>5. Права:</b> Удаление аккаунта в настройках.</p><p style="margin-bottom:8px"><b>6. Ответственность:</b> Разработчик не несет ответственности за качество услуг мастеров и финансовые договоренности.</p><p style="margin-bottom:8px"><b>7. Контакты:</b> support@pomogator.ru</p></div><button class="btn btn-o" onclick="document.getElementById('privacyModal').remove()">Закрыть</button></div>`;
+  document.body.appendChild(modal);
+}
+function deleteAccount() { document.getElementById('settingsModal').classList.add('h'); showConfirm('Удаление', 'Все данные будут стерты. Вы уверены?', () => { localStorage.removeItem('pg_user'); localStorage.removeItem('pg_orders'); localStorage.removeItem('pg_users'); showToast('Аккаунт удален.', 'success'); setTimeout(() => location.reload(), 1000); }); }
+
+// --- ЗАВИСШИЕ ЗАКАЗЫ ---
+function checkStuckOrders() {
+  const orders = JSON.parse(localStorage.getItem('pg_orders') || '[]'); const user = JSON.parse(localStorage.getItem('pg_user') || 'null');
+  if (!user || user.role !== 'client') return;
+  const now = Date.now();
+  orders.forEach(order => { if (order.status === 'in_progress' && (now - order.timestamp > 86400000)) { showToast(`⚠️ Заказ "${order.service}" висит больше суток.`, 'warning'); } });
+}
+
+// --- КАРТА ЗАКАЗА ---
+let orderMap, orderMarkerClient, orderMarkerMaster;
+function openOrderMap(orderId) {
+  const orders = JSON.parse(localStorage.getItem('pg_orders') || '[]');
+  const order = orders.find(o => o.id === orderId);
+  if (!order) return;
+
+  document.getElementById('orderDetailsContent').innerHTML = `<p><b>Услуга:</b> ${order.service}</p><p><b>Цена:</b> ${order.price} ₽</p><p><b>Адрес:</b> ${order.address}</p><p><b>Статус:</b> ${getStatusText(order.status)}</p><hr style="margin:10px 0;">`;
+  document.getElementById('orderDetailModal').classList.remove('h');
+
+  if (!orderMap) {
+    orderMap = L.map('orderMap', {zoomControl: true}).setView([order.lat || 55.75, order.lng || 37.61], 14);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(orderMap);
+  } else {
+    orderMap.setView([order.lat || 55.75, order.lng || 37.61], 14);
+  }
+
+  if (orderMarkerClient) orderMap.removeLayer(orderMarkerClient);
+  if (orderMarkerMaster) orderMap.removeLayer(orderMarkerMaster);
+
+  if (order.lat && order.lng) {
+    const clientIcon = L.divIcon({ className: 'custom-icon', html: `<div style="width:20px;height:20px;background:#dc2626;border:2px solid #fff;border-radius:50%;box-shadow:0 2px 5px rgba(0,0,0,0.4);"></div>`, iconSize: [20, 20], iconAnchor: [10, 10] });
+    orderMarkerClient = L.marker([order.lat, order.lng], {icon: clientIcon}).addTo(orderMap);
+    orderMarkerClient.bindPopup("📍 Место заказа");
+  }
+
+  if (order.master_lat && order.master_lng) {
+    const masterIcon = L.divIcon({ className: 'custom-icon', html: `<div style="width:20px;height:20px;background:#28a745;border:2px solid #fff;border-radius:50%;box-shadow:0 2px 5px rgba(0,0,0,0.4);"></div>`, iconSize: [20, 20], iconAnchor: [10, 10] });
+    orderMarkerMaster = L.marker([order.master_lat, order.master_lng], {icon: masterIcon}).addTo(orderMap);
+    orderMarkerMaster.bindPopup("🛠 Мастер");
+  }
+
+  setTimeout(() => orderMap.invalidateSize(), 100);
+}
+
+// --- СТАРТ ---
+renderServices();
+ui();
+setTimeout(initMap, 500);
+setTimeout(updateTimeGreeting, 100);
+setTimeout(checkStuckOrders, 3000);
+
+if (localStorage.getItem('pg_theme') === 'dark') document.body.classList.add('dark');
+if (localStorage.getItem('master_visible') === 'true') { const toggle = document.getElementById('showOnMapToggle'); if (toggle) toggle.checked = true; }
+
+if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/sw.js').catch(() => {}); }
+</script>
+</body>
+</html>
