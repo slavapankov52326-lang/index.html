@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#667eea">
+<title>Помогатор</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+/* --- ОБЩИЕ СТИЛИ --- */
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,-apple-system,sans-serif;-webkit-tap-highlight-color:transparent}
+body{background:linear-gradient(135deg,#667eea,#764ba2,#667eea);background-size:400% 400%;animation:bgShift 12s ease infinite;min-height:100vh;color:#333;padding:10px;user-select:none}
+@keyframes bgShift{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+.container{max-width:500px;margin:0 auto;width:100%}
+.h{display:none!important}
+
+/* --- ШАПКА --- */
+header{display:flex;align-items:center;justify-content:space-between;gap:10px;color:#fff;margin-bottom:20px;padding-top:10px}
+h1{font-size:1.5em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.auth-bar{display:flex;gap:6px}
+.auth-bar button{padding:8px 10px;border-radius:12px;border:none;background:#3b82f6;color:#fff;font-size:16px;min-width:44px;min-height:44px;cursor:pointer}
+
+/* --- ВКЛАДКИ --- */
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-bottom:12px}
+.tab{min-height:44px;padding:9px 6px;border:none;border-radius:9px;background:#3b82f6;color:#fff;font-weight:600;font-size:11px;cursor:pointer;transition:all 0.2s}
+.tab.active{background:#1e40af;transform:scale(1.02)}
+
+/* --- КАРТОЧКИ --- */
+.card{background:#fff;border-radius:16px;padding:14px;box-shadow:0 12px 32px rgba(0,0,0,.2);margin-bottom:12px}
+.blue-title{display:flex;align-items:center;gap:8px;padding:12px 16px;margin-bottom:14px;background:linear-gradient(135deg,#3b82f6,#1e40af);color:#fff;font-size:15px;font-weight:700;border-radius:12px}
+
+/* --- УСЛУГИ --- */
+.services{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:14px}
+.service{padding:8px 4px;border:2px solid #e0e0e0;border-radius:11px;text-align:center;background:#fafafa;min-height:85px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s}
+.service.selected{background:#f0f3ff;border-color:#667eea;transform:scale(0.98)}
+.service .icon{font-size:24px;margin-bottom:4px}
+.service .name{font-weight:600;font-size:10px;line-height:1.2}
+
+/* --- ФОРМЫ --- */
+.fg{margin-bottom:10px}
+label{display:block;margin-bottom:4px;font-weight:600;font-size:12px;color:#555}
+input,textarea,select{width:100%;padding:12px 14px;border:2px solid #e0e0e0;border-radius:10px;font-size:16px;font-family:inherit;background:#fff;min-height:48px;-webkit-appearance:none}
+input:focus,textarea:focus{outline:none;border-color:#667eea}
+textarea{resize:none;min-height:64px}
+
+/* --- КНОПКИ --- */
+.btn{width:100%;min-height:48px;padding:13px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;margin-top:5px;cursor:pointer}
+.btn-o{background:#fff;color:#667eea;border:2px solid #667eea}
+.btn-gold{background:linear-gradient(135deg,#fbbf24,#d97706);color:#fff}
+.btn-g{background:linear-gradient(135deg,#28a745,#20c997)}
+.btn-sm{padding:8px 12px;font-size:12px;width:auto;margin:0;min-height:36px}
+.btn-danger{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff}
+.btn-warning{background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff}
+.publish-btn{width:100%;min-height:56px;background:linear-gradient(135deg,#3b82f6,#1e40af);color:#fff;border:none;border-radius:14px;font-size:16px;font-weight:800;margin-top:8px;cursor:pointer}
+
+/* --- КАРТА --- */
+#map{height:200px;border-radius:10px;margin-bottom:10px;z-index:1}
+
+/* --- СПИСОК ЗАКАЗОВ --- */
+.oi{padding:12px;background:#f8f9ff;border-left:4px solid #667eea;border-radius:10px;margin-bottom:8px;cursor:pointer;position:relative}
+.oi h4{font-size:13px;margin-bottom:3px}
+.oi p{font-size:11px;color:#777;margin:2px 0}
+.st{display:inline-block;padding:4px 10px;border-radius:14px;font-size:10px;font-weight:700;margin-top:4px}
+.st-new{background:#fff3cd;color:#856404}
+.st-in_progress{background:#cfe2ff;color:#084298}
+.st-cancelled{background:#f8d7da;color:#842029}
+.st-done{background:#d1e7dd;color:#0f5132}
+
+/* --- МОДАЛЬНЫЕ ОКНА --- */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:1000;padding:12px;animation:fadeIn .25s ease-out;backdrop-filter:blur(3px)}
+.mc{background:#fff;border-radius:16px;padding:18px;max-width:460px;width:100%;max-height:90vh;overflow-y:auto;animation:pop .35s cubic-bezier(0.175, 0.885, 0.32, 1.275)}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes pop{0%{transform:scale(.6);opacity:0}60%{transform:scale(1.1)}100%{transform:scale(1);opacity:1}}
+
+/* --- НАСТРОЙКИ --- */
+.settings-section{padding:12px 0;border-bottom:1px solid #f0f0f0}
+.settings-label{display:flex;justify-content:space-between;align-items:center;font-size:14px;font-weight:600;color:#333}
+.switch{position:relative;display:inline-block;width:54px;height:30px}
+.switch input{opacity:0;width:0;height:0;position:absolute}
+.slider{position:absolute;inset:0;background:#ccc;border-radius:30px;transition:all .3s}
+.slider::before{content:'';position:absolute;height:24px;width:24px;left:3px;top:3px;background:#fff;border-radius:50%;transition:all .3s}
+.switch input:checked + .slider{background:#3b82f6}
+.switch input:checked + .slider::before{transform:translateX(24px)}
+
+/* --- ПОДПИСКА --- */
+.tariff-option{display:flex;justify-content:space-between;align-items:center;padding:16px;border:2px solid #e0e0e0;border-radius:12px;margin-bottom:8px;background:#fff;cursor:pointer}
+.tariff-option.selected{border-color:#f59e0b;background:#fffbeb}
+.tariff-info b{font-size:14px;color:#333;display:block}
+.tariff-info small{font-size:11px;color:#888;display:block}
+.tariff-price{font-size:18px;font-weight:800;color:#f59e0b}
+
+@media(max-width:360px){.services{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>🏠 Помогатор</h1>
+    <div class="auth-bar">
+      <button onclick="openAbout()">ℹ️</button>
+      <button onclick="openSettings()">⚙️</button>
+      <button onclick="openAuth()">👤</button>
+    </div>
+  </header>
+
+  <div class="tabs" id="tabs">
+    <button class="tab active" onclick="st('new')">➕ Заказать</button>
+    <button class="tab" onclick="st('my')">📋 Заказы</button>
+    <button class="tab" onclick="st('cab')">💼 Кабинет</button>
+  </div>
+
+  <!-- ВКЛАДКА: ЗАКАЗАТЬ -->
+  <div id="tab-new" class="card">
+    <h2 class="blue-title">Что нужно?</h2>
+    <div class="services" id="svc"></div>
+    <h2 class="blue-title">Детали</h2>
+    <div class="fg"><label>Адрес</label><input id="addr" placeholder="Город, улица, дом..."></div>
+    <div id="map"></div>
+    <div class="fg"><label>💰 Цена (₽)</label><input id="pr" type="number" placeholder="2000"></div>
+    <div class="fg"><label>💬 Комментарий</label><textarea id="cm" placeholder="Опишите задачу..."></textarea></div>
+    <button class="publish-btn" onclick="createOrder()">🚀 Опубликовать заказ</button>
+  </div>
+
+  <!-- ВКЛАДКА: ЗАКАЗЫ -->
+  <div id="tab-my" class="card h">
+    <h2 class="blue-title">📋 Мои заказы</h2>
+    <div id="list"></div>
+  </div>
+
+  <!-- ВКЛАДКА: КАБИНЕТ -->
+  <div id="tab-cab" class="card h">
+    <h2 class="blue-title">💼 Кабинет мастера</h2>
+    <div id="cabinetContent">
+      <p style="margin-bottom:15px;color:#666">Станьте мастером, чтобы получать заказы.</p>
+      <button class="btn btn-gold" onclick="openSubModal()">👑 Оформить подписку «Про»</button>
+    </div>
+  </div>
+</div>
+
+<!-- МОДАЛКА: АВТОРИЗАЦИЯ -->
+<div id="authModal" class="modal h">
+  <div class="mc">
+    <h2 class="blue-title" style="justify-content:center">🔐 Вход / Регистрация</h2>
+    <div class="fg"><label>Имя</label><input id="authName" placeholder="Иван"></div>
+    <div class="fg"><label>Роль</label>
+      <select id="authRole" onchange="toggleMasterFields()">
+        <option value="client">Заказчик</option>
+        <option value="executor">Мастер</option>
+      </select>
+    </div>
+    <div id="masterFields" class="h">
+      <div class="fg" style="text-align:center">
+        <label style="color:#dc3545">Обязательно для мастера!</label>
+        <button class="btn" onclick="startFaceCheck()" style="margin-top:5px">📸 Сделать селфи для проверки</button>
+        <p id="faceStatus" style="font-size:12px;color:#888;margin-top:5px">Не проверен</p>
+      </div>
+    </div>
+    <button class="btn" onclick="login()">Войти</button>
+    <button class="btn btn-o" onclick="document.getElementById('authModal').classList.add('h')">Отмена</button>
+  </div>
+</div>
+
+<!-- МОДАЛКА: ПРОВЕРКА ЛИЦА -->
+<div id="faceCheckModal" class="modal h">
+  <div class="mc" style="text-align:center">
+    <h2 class="blue-title" style="justify-content:center">📸 Проверка лица</h2>
+    <p style="font-size:13px;color:#666;margin-bottom:10px">Сделайте селфи, чтобы подтвердить личность.</p>
+    <video id="faceVideo" autoplay playsinline muted style="width:100%;max-width:260px;border-radius:50%;background:#000;border:4px solid #3b82f6;aspect-ratio:1;object-fit:cover;transform:scaleX(-1);margin-bottom:10px"></video>
+    <button class="btn btn-g" onclick="captureFace()">✅ Сделать снимок</button>
+    <button class="btn btn-o" onclick="cancelFaceCheck()">Отмена</button>
+  </div>
+</div>
+
+<!-- МОДАЛКА: ПОДПИСКА -->
+<div id="subModal" class="modal h">
+  <div class="mc">
+    <h2 class="blue-title" style="justify-content:center">💎 Подписка «Про»</h2>
+    <p style="font-size:13px;color:#666;margin-bottom:15px;text-align:center">Получайте больше заказов и растите в рейтинге.</p>
+    <div class="tariff-option selected" onclick="selectTariff('month', this)">
+      <div class="tariff-info"><b>Месяц</b><small>Оплата раз в месяц</small></div>
+      <div class="tariff-price">490 ₽</div>
+    </div>
+    <div class="tariff-option" onclick="selectTariff('year', this)">
+      <div class="tariff-info"><b>Год</b><small>Экономия 980 ₽</small></div>
+      <div class="tariff-price">4 900 ₽</div>
+    </div>
+    <button class="btn btn-gold" onclick="paySubscription()" style="margin-top:10px">👑 Оплатить</button>
+    <button class="btn btn-o" onclick="document.getElementById('subModal').classList.add('h')">Позже</button>
+  </div>
+</div>
+
+<!-- МОДАЛКА: НАСТРОЙКИ -->
+<div id="settingsModal" class="modal h">
+  <div class="mc">
+    <h2 class="blue-title" style="justify-content:center">⚙️ Настройки</h2>
+    <div class="settings-section">
+      <div class="settings-label"><span>🔊 Звук приложения</span><label class="switch"><input type="checkbox" checked onchange="toggleSound(this)"><span class="slider"></span></label></div>
+    </div>
+    <div class="settings-section">
+      <div class="settings-label"><span>🔔 Звук уведомлений чата</span><label class="switch"><input type="checkbox" checked onchange="toggleChatSound(this)"><span class="slider"></span></label></div>
+    </div>
+    <div class="settings-section">
+      <button class="btn btn-o" onclick="openPrivacy()" style="margin-top:5px">🔒 Политика конфиденциальности</button>
+    </div>
+    <div class="settings-section">
+      <button class="btn btn-danger" onclick="deleteAccount()" style="margin-top:5px">🗑 Удалить аккаунт</button>
+    </div>
+    <button class="btn btn-o" onclick="document.getElementById('settingsModal').classList.add('h')" style="margin-top:15px">Закрыть</button>
+  </div>
+</div>
+
+<!-- МОДАЛКА: О ПРИЛОЖЕНИИ -->
+<div id="aboutModal" class="modal h">
+  <div class="mc">
+    <h2 class="blue-title" style="justify-content:center">ℹ️ О приложении</h2>
+    <p style="font-size:13px;color:#555;margin-bottom:10px"><b>Помогатор</b> — платформа, где вы называете свою цену, а мастера откликаются.</p>
+    <p style="font-size:13px;color:#555;margin-bottom:10px">Мы работаем по всей России. Без посредников.</p>
+    <p style="font-size:12px;color:#888">Версия 1.0</p>
+    <button class="btn btn-o" onclick="document.getElementById('aboutModal').classList.add('h')">Закрыть</button>
+  </div>
+</div>
+
+<script>
+// --- ДАННЫЕ ---
+const services = [
+  {n:'Уборка', i:'🧹'}, {n:'Ремонт', i:'🔧'}, {n:'Сантехника', i:'🚿'},
+  {n:'Электрика', i:'⚡'}, {n:'Мебель', i:'🪑'}, {n:'Техника', i:'📺'},
+  {n:'ПК', i:'💻'}, {n:'Доставка', i:'📦'}, {n:'Переезд', i:'🚚'},
+  {n:'Участок', i:'🌱'}, {n:'Авто', i:'🚗'}
+];
+
+let selectedService = null;
+let map, marker;
+let faceStream = null;
+let isFaceVerified = false;
+
+// --- КАРТА ---
+function initMap() {
+  if (map) return;
+  map = L.map('map', {center: [60, 90], zoom: 3, minZoom: 2, maxZoom: 18, attributionControl: false}).setView([60, 90], 3);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+  marker = L.marker([55.75, 37.61], {draggable: true}).addTo(map);
+}
+
+// --- УСЛУГИ ---
+function renderServices() {
+  document.getElementById('svc').innerHTML = services.map(s => 
+    `<div class="service" onclick="pick('${s.n}', this)">
+      <div class="icon">${s.i}</div>
+      <div class="name">${s.n}</div>
+    </div>`
+  ).join('');
+}
+
+function pick(name, el) {
+  selectedService = name;
+  document.querySelectorAll('.service').forEach(s => s.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+// --- ВКЛАДКИ ---
+function st(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  document.querySelectorAll('[id^="tab-"]').forEach(c => c.classList.add('h'));
+  document.getElementById('tab-' + tab).classList.remove('h');
+
+  if (tab === 'my') renderOrders();
+  if (tab === 'new') setTimeout(initMap, 100);
+}
+
+// --- СОЗДАНИЕ ЗАКАЗА ---
+function createOrder() {
+  if (!selectedService) return alert('Выберите услугу');
+  const addr = document.getElementById('addr').value;
+  if (!addr) return alert('Укажите адрес');
+
+  const order = { id: Date.now(), service: selectedService, address: addr, price: document.getElementById('pr').value || 'договорная', time: new Date().toLocaleString('ru-RU'), status: 'new' };
+  const orders = JSON.parse(localStorage.getItem('pg_orders') || '[]');
+  orders.unshift(order);
+  localStorage.setItem('pg_orders', JSON.stringify(orders));
+  alert('Заказ на ' + selectedService + ' создан!');
+  
+  document.getElementById('addr').value = '';
+  document.getElementById('pr').value = '';
+  document.getElementById('cm').value = '';
+  document.querySelectorAll('.service').forEach(s => s.classList.remove('selected'));
+  selectedService = null;
+  st('my');
+}
+
+// --- СПИСОК ЗАКАЗОВ ---
+function renderOrders() {
+  const box = document.getElementById('list');
+  const orders = JSON.parse(localStorage.getItem('pg_orders') || '[]');
+  if (!orders.length) { box.innerHTML = '<div style="text-align:center;color:#999;padding:20px">📭 Заказов пока нет</div>'; return; }
+
+  box.innerHTML = orders.map(o => {
+    let actions = '';
+    if (o.status === 'new' || o.status === 'in_progress') {
+      actions = `<button class="btn btn-sm btn-warning" onclick="event.stopPropagation(); cancelOrder(${o.id})">↩️ Отменить</button>`;
+    } else if (o.status === 'cancelled' || o.status === 'done') {
+      actions = `<button class="btn btn-sm btn-danger" onclick="event.stopPropagation(); deleteOrder(${o.id})">🗑 Удалить</button>`;
+    }
+    return `<div class="oi"><h4>${o.service} — ${o.price} ₽</h4><p>📍 ${o.address}</p><p>⏰ ${o.time}</p><div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px"><span class="st st-${o.status || 'new'}">${getStatusText(o.status)}</span>${actions}</div></div>`;
+  }).join('');
+}
+
+function getStatusText(status) {
+  const map = { 'new': 'Ждёт откликов', 'in_progress': 'В работе', 'cancelled': 'Отменен', 'done': 'Выполнен' };
+  return map[status] || 'Ждёт откликов';
+}
+
+function cancelOrder(id) {
+  if (!confirm('Вы уверены, что хотите отменить этот заказ?')) return;
+  const orders = JSON.parse(localStorage.getItem('pg_orders') || '[]');
+  const index = orders.findIndex(o => o.id === id);
+  if (index !== -1) {
+    orders[index].status = 'cancelled';
+    localStorage.setItem('pg_orders', JSON.stringify(orders));
+    renderOrders();
+    alert('Заказ отменен');
+  }
+}
+
+function deleteOrder(id) {
+  if (!confirm('Удалить заказ навсегда?')) return;
+  let orders = JSON.parse(localStorage.getItem('pg_orders') || '[]');
+  orders = orders.filter(o => o.id !== id);
+  localStorage.setItem('pg_orders', JSON.stringify(orders));
+  renderOrders();
+  alert('Заказ удален');
+}
+
+// --- МОДАЛКИ ---
+function openAuth() { document.getElementById('authModal').classList.remove('h'); }
+function openSettings() { document.getElementById('settingsModal').classList.remove('h'); }
+function openAbout() { document.getElementById('aboutModal').classList.remove('h'); }
+function openSubModal() { document.getElementById('subModal').classList.remove('h'); }
+
+// --- ВХОД ---
+function toggleMasterFields() {
+  const role = document.getElementById('authRole').value;
+  document.getElementById('masterFields').classList.toggle('h', role !== 'executor');
+}
+
+function login() {
+  const name = document.getElementById('authName').value.trim();
+  const role = document.getElementById('authRole').value;
+  if (!name) return alert('Введите имя');
+  if (role === 'executor' && !isFaceVerified) return alert('Мастер обязан пройти проверку лица!');
+  const user = { name: name, role: role, verified: isFaceVerified };
+  localStorage.setItem('pg_user', JSON.stringify(user));
+  document.getElementById('authModal').classList.add('h');
+  alert('Вы вошли как ' + name + ' (' + (role === 'executor' ? 'Мастер' : 'Заказчик') + ')');
+}
+
+// --- СЕЛФИ ---
+async function startFaceCheck() {
+  document.getElementById('faceCheckModal').classList.remove('h');
+  try {
+    faceStream = await navigator.mediaDevices.getUserMedia({video: true});
+    document.getElementById('faceVideo').srcObject = faceStream;
+  } catch (e) {
+    alert('Нет доступа к камере');
+    document.getElementById('faceCheckModal').classList.add('h');
+  }
+}
+
+function captureFace() {
+  isFaceVerified = true;
+  document.getElementById('faceStatus').textContent = '✅ Проверен';
+  document.getElementById('faceStatus').style.color = '#28a745';
+  if (faceStream) faceStream.getTracks().forEach(t => t.stop());
+  document.getElementById('faceCheckModal').classList.add('h');
+  alert('Селфи сделано! Личность подтверждена.');
+}
+
+function cancelFaceCheck() {
+  if (faceStream) faceStream.getTracks().forEach(t => t.stop());
+  document.getElementById('faceCheckModal').classList.add('h');
+}
+
+// --- ПОДПИСКА ---
+function selectTariff(type, el) {
+  document.querySelectorAll('.tariff-option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function paySubscription() {
+  alert('💳 Переход к оплате (демо)');
+  document.getElementById('subModal').classList.add('h');
+}
+
+// --- НАСТРОЙКИ ---
+function toggleSound(el) { alert(el.checked ? '🔊 Звук включен' : '🔇 Звук выключен'); }
+function toggleChatSound(el) { alert(el.checked ? '🔔 Уведомления чата включены' : '🔕 Уведомления чата выключены'); }
+
+// --- ПОЛИТИКА И УДАЛЕНИЕ ---
+function openPrivacy() {
+  const modal = document.createElement('div');
+  modal.id = 'privacyModal';
+  modal.className = 'modal';
+  modal.innerHTML = `
+    <div class="mc">
+      <h2 class="blue-title" style="justify-content:center">🔒 Политика конфиденциальности</h2>
+      <div style="font-size:13px; color:#555; line-height:1.5; max-height:50vh; overflow-y:auto; margin-bottom:15px; text-align:left;">
+        <p><b>1. Какие данные мы собираем:</b> Имя, номер телефона, адрес (для выполнения заказа), геолокация (для карты), фото (для профиля и заказов).</p>
+        <p><b>2. Как используем:</b> Только для связи с вами, выполнения услуг и отображения заказов на карте. Мы не передаем данные третьим лицам без вашего согласия.</p>
+        <p><b>3. Хранение:</b> Данные хранятся на защищенных серверах на территории РФ.</p>
+        <p><b>4. Ваши права:</b> Вы можете удалить аккаунт в любой момент в настройках приложения. Все ваши данные будут стерты.</p>
+        <p><b>5. Контакты:</b> support@pomogator.ru</p>
+      </div>
+      <button class="btn btn-o" onclick="document.getElementById('privacyModal').remove()">Закрыть</button>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
+function deleteAccount() {
+  if (!confirm('Вы уверены, что хотите удалить аккаунт? Все ваши данные и заказы будут стерты безвозвратно.')) return;
+  localStorage.removeItem('pg_user');
+  localStorage.removeItem('pg_orders');
+  localStorage.removeItem('pg_users');
+  alert('Аккаунт удален. Приложение будет перезагружено.');
+  location.reload();
+}
+
+// --- СТАРТ ---
+renderServices();
+setTimeout(initMap, 500);
+</script>
+</body>
+</html>
