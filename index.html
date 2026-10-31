@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#4F46E5">
+<title>Помогатор</title>
+<style>
+:root{--p:#4F46E5;--p2:#8B5CF6;--bg:#F8FAFC;--s:#FFF;--s2:#F1F5F9;--b:#E2E8F0;--t:#0F172A;--m:#64748B;--ok:#10B981;--warn:#F59E0B;--err:#EF4444;--r:14px;--sh:0 4px 14px rgba(15,23,42,.08)}
+body.dark{--bg:#0F172A;--s:#1E293B;--s2:#334155;--b:#334155;--t:#F1F5F9;--m:#94A3B8}
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,-apple-system,sans-serif;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--t);min-height:100vh;padding:10px 10px 0;transition:.3s;overflow-x:hidden}
+.wrap{max-width:480px;margin:0 auto;display:flex;flex-direction:column;min-height:100vh}
+.h{display:none!important}
+header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-top:6px}
+.logo{width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,#6366F1,#8B5CF6);display:flex;align-items:center;justify-content:center;font-size:19px;box-shadow:var(--sh)}
+.brand{display:flex;align-items:center;gap:8px}
+.brand h1{font-size:15px;font-weight:800}
+.brand small{font-size:10px;color:var(--m);display:block}
+.top-btns{display:flex;gap:5px}
+.top-btns button{width:36px;height:36px;border-radius:11px;border:none;background:var(--s);font-size:15px;cursor:pointer;box-shadow:var(--sh)}
+.top-btns button:active{transform:scale(.92)}
+.hello{background:linear-gradient(135deg,#6366F1,#8B5CF6,#EC4899);color:#fff;padding:14px 16px;border-radius:var(--r);margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 8px 20px rgba(99,102,241,.3)}
+.hello b{font-size:13px}
+.hello small{font-size:10px;opacity:.85;display:block;margin-top:1px}
+.hello .time{font-size:22px;font-weight:800}
+.card{background:var(--s);border-radius:var(--r);padding:14px;box-shadow:var(--sh);margin-bottom:10px;border:1px solid var(--b)}
+.title{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:800;margin-bottom:10px}
+.title::before{content:'';width:3px;height:15px;background:linear-gradient(180deg,var(--p),var(--p2));border-radius:2px}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
+.svc{padding:6px 2px;border:2px solid var(--b);border-radius:9px;text-align:center;background:var(--s);cursor:pointer;transition:.15s;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:58px}
+.svc:active{transform:scale(.95)}
+.svc.on{border-color:var(--p);background:#EEF2FF;box-shadow:0 0 0 3px rgba(79,70,229,.15)}
+body.dark .svc.on{background:rgba(99,102,241,.15)}
+.svc span{font-size:18px;margin-bottom:2px}
+.svc b{font-size:8px;font-weight:700}
+.fg{margin-bottom:9px}
+label{display:block;margin-bottom:4px;font-weight:700;font-size:10px;color:var(--m)}
+input,textarea{width:100%;padding:11px;border:2px solid var(--b);border-radius:11px;font-size:13px;background:var(--s);color:var(--t);min-height:42px;font-family:inherit}
+input:focus,textarea:focus{outline:none;border-color:var(--p)}
+textarea{resize:none;min-height:55px}
+.urgent{background:#FEF3C7;padding:9px 11px;border-radius:11px;border:2px solid #FCD34D;display:flex;align-items:center;justify-content:space-between;margin-bottom:9px}
+body.dark .urgent{background:rgba(245,158,11,.15);border-color:rgba(245,158,11,.4)}
+.urgent b{font-size:11px;color:#92400E}
+body.dark .urgent b{color:#FCD34D}
+.urgent small{font-size:9px;color:#92400E;opacity:.8}
+.sw{position:relative;width:42px;height:24px;flex-shrink:0}
+.sw input{opacity:0;width:0;height:0;position:absolute}
+.sl{position:absolute;inset:0;background:#CBD5E1;border-radius:20px;cursor:pointer;transition:.3s}
+.sl::before{content:'';position:absolute;height:18px;width:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.3s}
+.sw input:checked+.sl{background:var(--p)}
+.sw input:checked+.sl::before{transform:translateX(18px)}
+.seg{display:flex;background:var(--s2);padding:3px;border-radius:11px;gap:2px;margin-bottom:6px}
+.seg button{flex:1;padding:8px 4px;border:none;background:none;border-radius:8px;font-size:10px;font-weight:700;color:var(--m);cursor:pointer;transition:.2s}
+.seg button.on{background:var(--s);color:var(--p);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+body.dark .seg button.on{background:rgba(99,102,241,.2);color:#C7D2FE}
+.btn{width:100%;min-height:44px;padding:11px;background:linear-gradient(135deg,var(--p),var(--p2));color:#fff;border:none;border-radius:11px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(79,70,229,.25);margin-top:5px}
+.btn:active{transform:scale(.97)}
+.btn.o{background:var(--s);color:var(--p);border:2px solid var(--b);box-shadow:none}
+.btn.g{background:linear-gradient(135deg,#10B981,#059669);box-shadow:0 4px 12px rgba(16,185,129,.3)}
+.btn.r{background:linear-gradient(135deg,#EF4444,#DC2626);box-shadow:0 4px 12px rgba(239,68,68,.3)}
+.btn.w{background:linear-gradient(135deg,#F59E0B,#D97706);box-shadow:0 4px 12px rgba(245,158,11,.3)}
+.btn.sm{padding:7px 10px;font-size:10px;width:auto;min-height:32px;margin:0;border-radius:8px}
+.pub{width:100%;min-height:52px;background:linear-gradient(135deg,var(--p),var(--p2));color:#fff;border:none;border-radius:13px;font-size:15px;font-weight:800;margin-top:6px;cursor:pointer;box-shadow:0 6px 18px rgba(79,70,229,.35);margin-bottom:20px}
+.pub:active{transform:scale(.97)}
+.photos{display:flex;gap:5px;margin-top:5px;flex-wrap:wrap}
+.photos .ph{position:relative;width:60px;height:60px}
+.photos img{width:60px;height:60px;object-fit:cover;border-radius:9px;border:2px solid var(--p)}
+.photos .rm{position:absolute;top:-5px;right:-5px;width:19px;height:19px;border-radius:50%;background:var(--err);color:#fff;border:2px solid #fff;font-size:11px;font-weight:700;cursor:pointer}
+.oi{padding:12px;background:var(--s);border:1px solid var(--b);border-left:3px solid var(--p);border-radius:11px;margin-bottom:8px;cursor:pointer;transition:.15s}
+.oi:active{transform:scale(.99)}
+.oi h4{font-size:12px;font-weight:800;margin-bottom:3px}
+.oi p{font-size:10px;color:var(--m);margin:2px 0}
+.st{display:inline-block;padding:3px 8px;border-radius:11px;font-size:9px;font-weight:800;margin-top:3px}
+.st.new{background:#FEF3C7;color:#92400E}
+.st.work{background:#DBEAFE;color:#1E40AF}
+.st.done{background:#D1FAE5;color:#065F46}
+.st.cancel{background:#FEE2E2;color:#991B1B}
+.bar{height:4px;background:var(--s2);border-radius:2px;overflow:hidden;margin:7px 0 3px}
+.bar div{height:100%;background:linear-gradient(90deg,var(--p),var(--p2));transition:width .4s}
+.bar-lbl{display:flex;justify-content:space-between;font-size:8px;color:var(--m);font-weight:700}
+.bar-lbl span.on{color:var(--p)}
+.nav{display:flex;justify-content:space-around;background:var(--s);padding:7px 8px calc(7px + env(safe-area-inset-bottom));border-radius:18px 18px 0 0;box-shadow:0 -4px 15px rgba(15,23,42,.08);border-top:1px solid var(--b);margin-top:auto}
+.nav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;background:none;border:none;padding:7px 3px;color:var(--m);cursor:pointer;border-radius:11px;font-size:0}
+.nav button.on{color:var(--p);background:#EEF2FF}
+body.dark .nav button.on{background:rgba(99,102,241,.15)}
+.nav svg{width:20px;height:20px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.nav b{font-size:9px;font-weight:700}
+.modal{position:fixed;inset:0;background:rgba(15,23,42,.65);display:flex;align-items:center;justify-content:center;z-index:1000;padding:12px;backdrop-filter:blur(4px)}
+.mc{background:var(--s);border-radius:20px;padding:18px;max-width:460px;width:100%;max-height:90vh;overflow-y:auto;position:relative;border:1px solid var(--b)}
+.close{position:absolute;top:10px;right:10px;width:28px;height:28px;border-radius:50%;background:var(--s2);border:none;font-size:15px;color:var(--m);cursor:pointer}
+.toast-box{position:fixed;bottom:85px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;align-items:center;gap:7px;pointer-events:none;width:calc(100% - 30px);max-width:400px}
+.toast{background:rgba(15,23,42,.94);color:#fff;padding:10px 16px;border-radius:13px;font-size:11px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.3);animation:tin .3s;display:flex;align-items:center;gap:7px;max-width:100%}
+.toast.ok{background:linear-gradient(135deg,#059669,#10B981)}
+.toast.err{background:linear-gradient(135deg,#DC2626,#EF4444)}
+.toast.warn{background:linear-gradient(135deg,#D97706,#F59E0B)}
+@keyframes tin{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.resp{background:linear-gradient(135deg,#F59E0B,#D97706);color:#fff;padding:11px;border-radius:11px;margin-bottom:10px;display:flex;align-items:center;gap:9px;cursor:pointer;box-shadow:0 6px 18px rgba(245,158,11,.3)}
+.resp:active{transform:scale(.98)}
+.resp .em{font-size:22px}
+.resp b{font-size:11px;display:block;margin-bottom:1px}
+.resp small{font-size:9px;opacity:.9}
+.rc{background:var(--s);border:2px solid var(--b);border-radius:11px;padding:10px;margin-bottom:7px;display:flex;gap:9px;align-items:center}
+.rc .av{width:40px;height:40px;border-radius:50%;background:var(--s2);background-size:cover;background-position:center;border:2px solid var(--ok);flex-shrink:0}
+.rc .info{flex:1;min-width:0}
+.rc b{font-size:12px;display:block}
+.rc small{font-size:9px;color:var(--m)}
+.rc .price{color:var(--ok);font-weight:800;font-size:11px}
+.stat{text-align:center;padding:12px 6px;background:var(--s2);border-radius:11px}
+.stat .em{font-size:18px}
+.stat .l{font-size:8px;color:var(--m);font-weight:600}
+.stat .v{font-size:18px;font-weight:800}
+.chat-m{flex:1;overflow-y:auto;padding:10px;background:var(--s2);border-radius:11px;margin-bottom:8px;display:flex;flex-direction:column;gap:5px;min-height:180px}
+.bub{max-width:80%;padding:8px 11px;border-radius:13px;font-size:11px;line-height:1.4}
+.bub.me{align-self:flex-end;background:linear-gradient(135deg,var(--p),var(--p2));color:#fff;border-bottom-right-radius:4px}
+.bub.other{align-self:flex-start;background:var(--s);color:var(--t);border-bottom-left-radius:4px}
+.bub .tm{font-size:8px;opacity:.7;margin-top:2px;text-align:right}
+.role-btn{padding:12px 6px;border:2px solid var(--b);border-radius:11px;background:var(--s);color:var(--m);font-weight:700;font-size:12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px}
+.role-btn.on{border-color:var(--p)!important;background:#EEF2FF!important;color:var(--p)!important}
+body.dark .role-btn.on{background:rgba(99,102,241,.15)!important;color:#A5B4FC!important}
+.tariff{display:flex;justify-content:space-between;align-items:center;padding:12px;border:2px solid var(--b);border-radius:11px;margin-bottom:7px;cursor:pointer;background:var(--s)}
+.tariff.on{border-color:var(--warn);background:#FEF3C7}
+body.dark .tariff.on{background:rgba(245,158,11,.15)}
+.tariff b{font-size:12px;display:block}
+.tariff small{font-size:9px;color:var(--m)}
+.tariff .pr{font-size:15px;font-weight:800;color:var(--warn)}
+.set{padding:10px 0;border-bottom:1px solid var(--b);display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:600}
+.set:last-child{border:none}
+.pay{transition:.2s;border:2px solid var(--b);border-radius:11px;background:var(--s);color:var(--m);font-weight:700;font-size:11px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 4px}
+.pay.on{border-color:var(--p)!important;background:#EEF2FF!important;color:var(--p)!important}
+body.dark .pay.on{background:rgba(99,102,241,.15)!important;color:#A5B4FC!important}
+@media(max-width:360px){.grid{grid-template-columns:repeat(3,1fr)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand"><div class="logo">🏠</div><div><h1>Помогатор</h1><small>бытовые услуги рядом</small></div></div>
+    <div class="top-btns">
+      <button onclick="show('mAbout')">ℹ️</button>
+      <button onclick="show('mSet')">⚙️</button>
+      <button id="btnLogin" onclick="openAuth()">👤</button>
+      <button id="btnLogout" class="h" onclick="logout()">🚪</button>
+    </div>
+  </header>
+
+  <div id="tab-new" class="card">
+    <div id="respBanner"></div>
+    <div class="hello"><div><b id="greet">Добрый день!</b><small id="date">Сегодня</small></div><div class="time" id="clock">00:00</div></div>
+    <div class="title">Что нужно?</div>
+    <div class="grid" id="svcGrid"></div>
+    <div class="title" style="margin-top:14px">Детали</div>
+    <div class="fg"><label>📍 Адрес</label><input id="addr" placeholder="Город, улица, дом"></div>
+    <div class="fg"><label>💰 Цена (от 100 ₽)</label><input id="price" type="number" placeholder="2000" min="100" inputmode="numeric"></div>
+    <div class="urgent"><div><b>⚡ Срочный заказ</b><br><small>Мастера приедут быстрее</small></div><label class="sw" style="margin:0"><input type="checkbox" id="urgent"><span class="sl"></span></label></div>
+    <div class="fg"><label>⏰ Когда удобно?</label><div class="seg"><button class="on" onclick="pickTime('Скоро',this)">⚡ Скоро</button><button onclick="pickTime('Вечером',this)">🌆 Вечером</button><button onclick="pickTime('Завтра',this)">📅 Завтра</button></div></div>
+    <div class="fg"><label>💬 Комментарий</label><textarea id="comment" placeholder="Опишите задачу..."></textarea></div>
+    <div class="fg">
+      <label>📸 Фото (до 3)</label>
+      <input type="file" id="phCam" accept="image/*" capture="environment" style="display:none" onchange="addPhotos(event)">
+      <input type="file" id="phGal" accept="image/*" multiple style="display:none" onchange="addPhotos(event)">
+      <div style="display:flex;gap:5px"><button class="btn o" onclick="document.getElementById('phCam').click()" style="flex:1">📷 Камера</button><button class="btn o" onclick="document.getElementById('phGal').click()" style="flex:1">🖼 Галерея</button></div>
+      <div class="photos" id="photoPreview"></div>
+    </div>
+    <button class="pub" onclick="createOrder()">🚀 Опубликовать заказ</button>
+  </div>
+
+  <div id="tab-my" class="card h">
+    <div class="title">📋 Заказы</div>
+    <div class="seg" style="margin-bottom:10px"><button class="on" onclick="switchTab('active',this)">🔥 Активные</button><button onclick="switchTab('history',this)">📜 История</button></div>
+    <div id="list"></div>
+  </div>
+
+  <div id="tab-cab" class="card h">
+    <div class="title">💼 Кабинет мастера</div>
+    <div id="cabMsg" style="text-align:center;padding:18px;color:var(--m);font-size:12px">Войдите как <b>Мастер</b>, чтобы управлять заказами.</div>
+    <div id="cabPanel" class="h">
+      <div style="display:flex;align-items:center;gap:9px;padding:10px;background:var(--s2);border-radius:11px;margin-bottom:12px;border:2px solid var(--ok)">
+        <div id="cabAv" style="width:46px;height:46px;border-radius:50%;background-size:cover;background-position:center;border:2px solid var(--ok);flex-shrink:0"></div>
+        <div><div id="cabName" style="font-weight:800;font-size:13px">Мастер</div><div style="font-size:9px;color:var(--ok);font-weight:700">✅ Проверен</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:12px">
+        <div class="stat"><div class="em">📦</div><div class="l">Выполнено</div><div class="v" id="stDone" style="color:var(--p)">0</div></div>
+        <div class="stat"><div class="em">💰</div><div class="l">Заработано</div><div class="v" id="stEarn" style="color:var(--ok)">0 ₽</div></div>
+        <div class="stat"><div class="em">⭐</div><div class="l">Рейтинг</div><div class="v" id="stRate" style="color:var(--warn)">0.0</div></div>
+        <div class="stat"><div class="em">🤝</div><div class="l">Доступно</div><div class="v" id="stAvail" style="color:#8B5CF6">0</div></div>
+      </div>
+      <button class="btn w" onclick="show('mSub')">👑 Подписка «Про»</button>
+    </div>
+  </div>
+
+  <div class="nav">
+    <button data-tab="new" class="on" onclick="st('new')"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg><b>Заказать</b></button>
+    <button data-tab="my" onclick="st('my')"><svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg><b>Заказы</b></button>
+    <button data-tab="cab" id="btnCab" class="h" onclick="st('cab')"><svg viewBox="0 0 24 24"><path d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg><b>Кабинет</b></button>
+  </div>
+</div><div id="mAuth" class="modal h">
+  <div class="mc">
+    <button class="close" onclick="hide('mAuth')">✕</button>
+    <div class="title" style="justify-content:center;margin-top:6px">🔐 Вход</div>
+    <div style="text-align:center;margin-bottom:10px">
+      <div id="authAv" style="width:70px;height:70px;border-radius:50%;background:linear-gradient(135deg,#DBEAFE,#93C5FD);margin:0 auto;display:flex;align-items:center;justify-content:center;font-size:32px;color:#fff;background-size:cover;background-position:center">👤</div>
+      <div id="avHint" style="font-size:9px;color:var(--m);margin-top:5px">Фото профиля (необязательно)</div>
+    </div>
+    <div class="fg"><label>Имя</label><input id="aName" placeholder="Иван"></div>
+    <div class="fg"><label>Телефон</label><input id="aPhone" type="tel" placeholder="+7 999 123-45-67"></div>
+    <div class="fg"><label>Пароль (мин 4)</label><input id="aPass" type="password" placeholder="••••"></div>
+    <div class="fg">
+      <label>Кто вы?</label>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">
+        <button id="rbClient" class="role-btn on" onclick="pickRole('client')"><span style="font-size:20px">🏠</span>Заказчик</button>
+        <button id="rbExec" class="role-btn" onclick="pickRole('executor')"><span style="font-size:20px">🛠</span>Мастер</button>
+      </div>
+    </div>
+    <div id="masterBox" class="h" style="text-align:center;background:#FEF3C7;border:2px solid #FCD34D;border-radius:11px;padding:10px;margin-bottom:9px">
+      <b style="color:#92400E;font-size:11px">🔒 Мастерам — только селфи</b>
+      <p style="font-size:9px;color:#92400E;margin:3px 0">Из галереи нельзя</p>
+      <button class="btn w" onclick="startFace()" style="margin-top:4px">📸 Сделать селфи</button>
+      <p id="faceStatus" style="font-size:10px;color:var(--m);margin-top:5px">Не проверен</p>
+    </div>
+    <button class="btn" onclick="login()">Войти</button>
+    <button class="btn o" onclick="hide('mAuth')">Отмена</button>
+  </div>
+</div>
+
+<div id="mFace" class="modal h">
+  <div class="mc" style="text-align:center">
+    <div class="title" style="justify-content:center;margin-top:6px">📸 Проверка лица</div>
+    <p style="font-size:11px;color:var(--m);margin-bottom:8px">Смотрите в камеру</p>
+    <video id="faceVid" autoplay playsinline muted style="width:100%;max-width:220px;border-radius:50%;background:#000;border:4px solid var(--p);aspect-ratio:1;object-fit:cover;transform:scaleX(-1);margin-bottom:8px"></video>
+    <button class="btn g" onclick="captureFace()">✅ Снимок</button>
+    <button class="btn o" onclick="cancelFace()">Отмена</button>
+  </div>
+</div>
+
+<div id="mDetail" class="modal h">
+  <div class="mc">
+    <button class="close" onclick="hide('mDetail')">✕</button>
+    <div class="title" style="justify-content:center;margin-top:6px">Детали заказа</div>
+    <div id="detailBody"></div>
+    <button class="btn o" onclick="hide('mDetail')">Закрыть</button>
+  </div>
+</div>
+
+<div id="mChoose" class="modal h">
+  <div class="mc">
+    <button class="close" onclick="hide('mChoose')">✕</button>
+    <div class="title" style="justify-content:center;margin-top:6px">👥 Выберите мастера</div>
+    <div id="chooseList"></div>
+  </div>
+</div>
+
+<div id="mChat" class="modal h">
+  <div class="mc" style="display:flex;flex-direction:column;height:78vh">
+    <div class="title" style="justify-content:space-between;margin-top:6px"><span id="chatTitle">💬 Чат</span><button onclick="hide('mChat')" style="background:none;border:none;font-size:18px;color:var(--m);cursor:pointer">✕</button></div>
+    <div id="chatBox" class="chat-m"></div>
+    <div style="display:flex;gap:5px">
+      <input id="chatInput" placeholder="Сообщение..." style="flex:1" onkeydown="if(event.key==='Enter')sendMsg()">
+      <button class="btn g" onclick="sendMsg()" style="width:auto;margin:0;padding:0 14px">➤</button>
+    </div>
+  </div>
+</div>
+
+<div id="mRate" class="modal h">
+  <div class="mc" style="text-align:center">
+    <div class="title" style="justify-content:center;margin-top:6px">⭐ Оцените мастера</div>
+    <p style="font-size:12px;color:var(--m);margin-bottom:10px">Как справился?</p>
+    <div id="stars" style="font-size:34px;display:flex;justify-content:center;gap:7px;margin-bottom:14px;cursor:pointer">
+      <span onclick="setRate(1)">★</span><span onclick="setRate(2)">★</span><span onclick="setRate(3)">★</span><span onclick="setRate(4)">★</span><span onclick="setRate(5)">★</span>
+    </div>
+    <button class="btn w" onclick="submitRate()">Отправить</button>
+    <button class="btn o" onclick="hide('mRate')">Позже</button>
+  </div>
+</div>
+
+<div id="mPay" class="modal h">
+  <div class="mc" style="text-align:center">
+    <button class="close" onclick="hide('mPay')">✕</button>
+    <div class="title" style="justify-content:center;margin-top:6px">💳 Оплата</div>
+    <p style="font-size:11px;color:var(--m);margin-bottom:8px">Оплатите мастеру после работ</p>
+    <div id="payAmount" style="font-size:28px;font-weight:800;color:var(--p);margin-bottom:12px">0 ₽</div>
+    <div id="payMaster"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px">
+      <button id="payCash" class="pay on" onclick="pickPay('cash')"><span style="font-size:18px">💵</span>Наличные</button>
+      <button id="payCard" class="pay" onclick="pickPay('card')"><span style="font-size:18px">💳</span>Карта</button>
+    </div>
+    <button class="btn g" onclick="doPay()">✅ Я оплатил</button>
+    <button class="btn o" onclick="hide('mPay')">Отмена</button>
+  </div>
+</div>
+
+<div id="mSub" class="modal h">
+  <div class="mc">
+    <button class="close" onclick="hide('mSub')">✕</button>
+    <div class="title" style="justify-content:center;margin-top:6px">💎 Подписка «Про»</div>
+    <p style="font-size:11px;color:var(--m);margin-bottom:10px;text-align:center">7 дней бесплатно</p>
+    <div class="tariff on" onclick="pickTariff(this)"><div><b>Месяц</b><small>Оплата раз в месяц</small></div><div class="pr">490 ₽</div></div>
+    <div class="tariff" onclick="pickTariff(this)"><div><b>Год</b><small>Экономия 980 ₽</small></div><div class="pr">4 900 ₽</div></div>
+    <button class="btn w" onclick="paySub()">👑 Оплатить</button>
+    <button class="btn o" onclick="hide('mSub')">Позже</button>
+  </div>
+</div>
+
+<div id="mSet" class="modal h">
+  <div class="mc">
+    <button class="close" onclick="hide('mSet')">✕</button>
+    <div class="title" style="justify-content:center;margin-top:6px">⚙️ Настройки</div>
+    <div class="set"><span>🔊 Звук</span><label class="sw"><input type="checkbox" id="sndToggle" checked onchange="soundOn=this.checked"><span class="sl"></span></label></div>
+    <div class="set"><span>🔔 Звук чата</span><label class="sw"><input type="checkbox" id="chatSndToggle" checked onchange="chatSound=this.checked"><span class="sl"></span></label></div>
+    <div class="set"><span>🎨 Тема</span><div style="display:flex;gap:6px"><button class="btn o sm" onclick="setTheme('light')">☀️</button><button class="btn o sm" onclick="setTheme('dark')">🌙</button></div></div>
+    <button class="btn o" onclick="window.open('https://max.ru/+79242852799')" style="margin-top:8px">💬 Поддержка</button>
+    <button class="btn r" onclick="delAcc()" style="margin-top:8px">🗑 Удалить аккаунт</button>
+    <button class="btn o" onclick="hide('mSet')" style="margin-top:8px">Закрыть</button>
+  </div>
+</div>
+
+<div id="mAbout" class="modal h">
+  <div class="mc">
+    <button class="close" onclick="hide('mAbout')">✕</button>
+    <div class="title" style="justify-content:center;margin-top:6px">ℹ️ О приложении</div>
+    <div style="font-size:11px;color:var(--m);line-height:1.6">
+      <p><b style="color:var(--t)">Помогатор</b> — сервис бытовых услуг. Вы называете цену, мастера рядом откликаются.</p>
+      <p style="margin-top:6px"><b style="color:var(--t)">Безопасность:</b> мастера проходят проверку через селфи.</p>
+      <p style="margin-top:6px"><b style="color:var(--t)">Выбор:</b> вы сами выбираете мастера из откликов.</p>
+      <p style="margin-top:6px"><b style="color:var(--t)">Подписка:</b> 7 дней бесплатно, потом 490 ₽/мес.</p>
+      <div style="background:#FEE2E2;border:2px solid var(--err);border-radius:11px;padding:9px;margin-top:10px"><p style="font-size:10px;color:#991B1B;font-weight:700;text-align:center">⚠️ Разработчик не несёт ответственности за качество услуг мастеров и финансовые договорённости.</p></div>
+    </div>
+    <button class="btn o" onclick="window.open('https://max.ru/+79242852799')" style="margin-top:10px">💬 Поддержка MAX</button>
+    <p style="font-size:9px;color:var(--m);text-align:center;margin-top:8px">Версия 1.0 • Россия</p>
+    <button class="btn o" onclick="hide('mAbout')" style="margin-top:6px">Закрыть</button>
+  </div>
+</div><script>
+var SVC=[{n:'Уборка',e:'🧹'},{n:'Ремонт',e:'🔧'},{n:'Сантехника',e:'🚰'},{n:'Электрика',e:'⚡'},{n:'Мебель',e:'🪑'},{n:'Техника',e:'📺'},{n:'ПК',e:'💻'},{n:'Доставка',e:'📦'},{n:'Переезд',e:'🚚'},{n:'Участок',e:'🌳'},{n:'Авто',e:'🚗'}];
+var selSvc=null,photos=[],timeVal='Скоро',orderTab='active';
+var chatOrderId=null,rateOrder=null,rateVal=0,payOrder=null,payMethod='cash';
+var faceStream=null,faceOK=false,authAvatar=null;
+var soundOn=true,chatSound=true;
+var lastRespCount=null,lastAvailIds=[];
+
+function $(id){return document.getElementById(id)}
+function show(id){$(id).classList.remove('h')}
+function hide(id){$(id).classList.add('h')}
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function load(k,f){try{var v=localStorage.getItem(k);return v?JSON.parse(v):f}catch(e){return f}}
+function save(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){toast('Хранилище заполнено','err');return false}}
+function toast(m,t){t=t||'info';var c=document.querySelector('.toast-box');if(!c){c=document.createElement('div');c.className='toast-box';document.body.appendChild(c)}var d=document.createElement('div');d.className='toast '+t;d.textContent=m;c.appendChild(d);setTimeout(function(){d.remove()},2500)}
+function beep(){if(!soundOn)return;try{var C=window.AudioContext||window.webkitAudioContext;if(!C)return;var ctx=new C();var o=ctx.createOscillator(),g=ctx.createGain();o.frequency.value=700;g.gain.value=.1;o.connect(g);g.connect(ctx.destination);o.start();o.stop(ctx.currentTime+.08)}catch(e){}}
+function bell(){if(!soundOn)return;if(navigator.vibrate)navigator.vibrate([120,60,120]);try{var C=window.AudioContext||window.webkitAudioContext;if(!C)return;var ctx=new C();[880,1320].forEach(function(f,i){var o=ctx.createOscillator(),g=ctx.createGain();o.frequency.value=f;g.gain.value=.15;o.connect(g);g.connect(ctx.destination);o.start(ctx.currentTime+i*.08);o.stop(ctx.currentTime+i*.08+.4)})}catch(e){}}
+
+function renderSvc(){
+  $('svcGrid').innerHTML=SVC.map(function(s){return '<div class="svc'+(selSvc===s.n?' on':'')+'" data-n="'+esc(s.n)+'"><span>'+s.e+'</span><b>'+esc(s.n)+'</b></div>'}).join('');
+  document.querySelectorAll('#svcGrid .svc').forEach(function(el){el.onclick=function(){selSvc=el.dataset.n;document.querySelectorAll('.svc').forEach(function(x){x.classList.remove('on')});el.classList.add('on');beep()}})
+}
+
+function st(tab){
+  var u=load('pg_user',null);
+  if(u&&u.role==='executor'&&tab==='new')tab='my';
+  document.querySelectorAll('[id^="tab-"]').forEach(function(c){c.classList.add('h')});
+  var el=$('tab-'+tab);if(el)el.classList.remove('h');
+  document.querySelectorAll('.nav button').forEach(function(b){b.classList.remove('on')});
+  var bn=document.querySelector('.nav button[data-tab="'+tab+'"]');if(bn)bn.classList.add('on');
+  if(tab==='my')renderOrders();
+  if(tab==='cab')renderCab();
+  if(tab==='new')renderBanner();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function switchTab(t,btn){orderTab=t;document.querySelectorAll('#tab-my .seg button').forEach(function(b){b.classList.remove('on')});btn.classList.add('on');renderOrders()}
+function pickTime(v,btn){timeVal=v;document.querySelectorAll('#tab-new .seg button').forEach(function(b){b.classList.remove('on')});btn.classList.add('on');beep()}
+
+function tick(){
+  var d=new Date(),h=d.getHours(),t=d.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'}),ds=d.toLocaleDateString('ru-RU',{day:'numeric',month:'long',year:'numeric'});
+  var g=h>=5&&h<12?'Доброе утро!':h>=12&&h<18?'Добрый день!':h>=18&&h<23?'Добрый вечер!':'Доброй ночи!';
+  $('greet').textContent=g;$('date').textContent=ds;$('clock').textContent=t;
+}
+
+function addPhotos(e){
+  var files=e.target.files;if(!files||!files.length)return;
+  var free=3-photos.length;if(free<=0){toast('Максимум 3 фото','warn');return}
+  Array.prototype.slice.call(files,0,free).forEach(function(f){
+    var r=new FileReader();
+    r.onload=function(ev){
+      var img=new Image();
+      img.onload=function(){
+        var c=document.createElement('canvas'),w=img.width,hh=img.height,m=800;
+        if(w>m||hh>m){if(w>hh){hh=Math.round(hh*m/w);w=m}else{w=Math.round(w*m/hh);hh=m}}
+        c.width=w;c.height=hh;c.getContext('2d').drawImage(img,0,0,w,hh);
+        photos.push(c.toDataURL('image/jpeg',.6));renderPhotos();
+      };
+      img.src=ev.target.result;
+    };
+    r.readAsDataURL(f);
+  });
+  e.target.value='';
+}
+function renderPhotos(){$('photoPreview').innerHTML=photos.map(function(p,i){return '<div class="ph"><img src="'+p+'"><button class="rm" onclick="rmPhoto('+i+')">×</button></div>'}).join('')}
+function rmPhoto(i){photos.splice(i,1);renderPhotos()}
+
+function createOrder(){
+  var u=load('pg_user',null);
+  if(!u){toast('Войдите в аккаунт','warn');return}
+  if(u.role==='executor'){toast('Мастера не создают заказы','err');return}
+  if(!selSvc){toast('Выберите услугу','err');return}
+  var addr=$('addr').value.trim();if(!addr){toast('Введите адрес','err');return}
+  var pr=parseInt($('price').value,10);
+  if(!pr||isNaN(pr)){toast('Укажите цену','err');return}
+  if(pr<100){toast('Минимум 100 ₽','warn');return}
+  if(pr>20000){toast('Максимум 20000 ₽','warn');return}
+  var orders=load('pg_orders',[]);
+  orders.unshift({id:Date.now(),user_id:u.id,name:u.name,phone:u.phone,service:selSvc,address:addr,price:String(pr),comment:$('comment').value.trim(),time:timeVal,status:'new',urgent:$('urgent').checked,timestamp:Date.now(),client_avatar:u.avatar||null,photos:photos.slice(),responses:[]});
+  if(!save('pg_orders',orders))return;
+  toast('✅ Заказ создан','ok');
+  $('addr').value='';$('price').value='';$('comment').value='';$('urgent').checked=false;
+  photos=[];renderPhotos();selSvc=null;renderSvc();
+  renderBanner();st('my');
+}
+
+function renderBanner(){
+  var u=load('pg_user',null);if(!u||u.role!=='client'){$('respBanner').innerHTML='';return}
+  var orders=load('pg_orders',[]);
+  var mine=orders.filter(function(o){return o.status==='new'&&(o.user_id===u.id||o.name===u.name)&&o.responses&&o.responses.length>0});
+  if(!mine.length){$('respBanner').innerHTML='';return}
+  var total=mine.reduce(function(s,o){return s+o.responses.length},0);
+  $('respBanner').innerHTML='<div class="resp" onclick="openChoose()"><div class="em">👥</div><div style="flex:1"><b>'+total+' мастер(ов) хотят взять!</b><small>'+esc(mine[0].service)+' — '+esc(mine[0].price)+' ₽</small></div><div style="font-size:20px">›</div></div>';
+}
+
+function openChoose(){
+  var u=load('pg_user',null);if(!u)return;
+  var orders=load('pg_orders',[]);
+  var mine=orders.filter(function(o){return o.status==='new'&&(o.user_id===u.id||o.name===u.name)&&o.responses&&o.responses.length>0});
+  if(!mine.length){toast('Пока нет откликов','info');return}
+  var html='';
+  mine.forEach(function(o){
+    html+='<div style="background:#EEF2FF;padding:8px 10px;border-radius:10px;margin:8px 0 6px;font-size:11px;font-weight:800;color:var(--p)">📋 '+esc(o.service)+' — '+esc(o.price)+' ₽</div>';
+    o.responses.forEach(function(r,i){
+      html+='<div class="rc"><div class="av" style="background-image:url(\''+esc(r.master_avatar||'')+'\')"></div><div class="info"><b>'+esc(r.master_name)+' ✅</b><small>⭐ '+(Number(r.master_rating)||5).toFixed(1)+' • Проверен</small><div class="price">'+esc(r.master_price)+' ₽</div></div><button class="btn g sm" onclick="chooseMaster('+o.id+','+i+')">Выбрать</button></div>';
+    });
+  });
+  $('chooseList').innerHTML=html;show('mChoose');
+}
+function chooseMaster(oid,ri){
+  var orders=load('pg_orders',[]);
+  var i=orders.findIndex(function(o){return o.id===oid});if(i<0)return;
+  var r=orders[i].responses[ri];if(!r)return;
+  if(!confirm('Выбрать '+r.master_name+'?'))return;
+  orders[i].status='in_progress';orders[i].master_name=r.master_name;orders[i].master_avatar=r.master_avatar;
+  orders[i].master_phone=r.master_phone;orders[i].master_rating=r.master_rating;orders[i].price=r.master_price;
+  if(save('pg_orders',orders)){hide('mChoose');renderBanner();renderOrders();toast('✅ Выбран '+r.master_name,'ok')}
+}
+
+function statusText(s){return s==='new'?'Ждёт откликов':s==='in_progress'?'В работе':s==='done'?'Выполнен':s==='cancelled'?'Отменён':'Ждёт'}
+function statusCls(s){return s==='new'?'new':s==='in_progress'?'work':s==='done'?'done':'cancel'}
+function renderBar(s){
+  if(s==='cancelled')return '<div style="text-align:center;padding:6px;background:#FEE2E2;color:#991B1B;border-radius:8px;font-size:10px;font-weight:700;margin-top:5px">❌ Отменён</div>';
+  var idx=s==='new'?1:s==='in_progress'?2:s==='done'?3:0;
+  var pct=idx===0?0:(idx/3)*100;
+  var steps=['Опубликован','Отклики','В работе','Готово'];
+  return '<div class="bar"><div style="width:'+pct+'%"></div></div><div class="bar-lbl">'+steps.map(function(l,i){return '<span class="'+(i<=idx?'on':'')+'">'+l+'</span>'}).join('')+'</div>';
+}
+function renderOrders(){
+  var all=load('pg_orders',[]),u=load('pg_user',null),html='';
+  var list;
+  if(u&&u.role==='executor'){
+    if(orderTab==='active'){
+      list=all.filter(function(o){return (o.status==='new'&&!(o.responses||[]).some(function(r){return r.master_name===u.name}))||(o.status==='in_progress'&&o.master_name===u.name)});
+    }else{
+      list=all.filter(function(o){return (o.status==='done'||o.status==='cancelled')&&o.master_name===u.name});
+    }
+  }else{
+    list=orderTab==='active'?all.filter(function(o){return o.status==='new'||o.status==='in_progress'}):all.filter(function(o){return o.status==='done'||o.status==='cancelled'});
+  }
+  if(!list.length){$('list').innerHTML='<div style="text-align:center;color:var(--m);padding:20px;font-size:12px">📭 Заказов нет</div>';return}
+  list.forEach(function(o){
+    var actions='';
+    if(u&&u.role==='executor'){
+      if(o.status==='new'&&!(o.responses||[]).some(function(r){return r.master_name===u.name})){
+        actions='<button class="btn g sm" onclick="event.stopPropagation();respond('+o.id+')">🤝 Откликнуться</button>';
+      }else if(o.status==='new'){
+        actions='<span class="st new">✅ Отклик отправлен</span>';
+      }else if(o.status==='in_progress'&&o.master_name===u.name){
+        actions='<button class="btn sm" onclick="event.stopPropagation();openChat('+o.id+')" style="background:#8B5CF6">💬 Чат</button>';
+      }
+    }else if(u&&u.role==='client'){
+      if(o.status==='new')actions='<button class="btn w sm" onclick="event.stopPropagation();cancelOrd('+o.id+')">↩️ Отменить</button>';
+      else if(o.status==='in_progress')actions='<button class="btn sm" onclick="event.stopPropagation();openRate('+o.id+')" style="background:#3B82F6">🏁 Завершить</button><button class="btn sm" onclick="event.stopPropagation();openChat('+o.id+')" style="background:#8B5CF6">💬</button>';
+      else if(o.status==='done'){
+        if(o.payment_status!=='paid')actions='<button class="btn g sm" onclick="event.stopPropagation();openPay('+o.id+')">💳 Оплатить</button>';
+        else actions='<span class="st done">✅ Оплачено</span>';
+        actions+='<button class="btn r sm" onclick="event.stopPropagation();delOrd('+o.id+')">🗑</button>';
+      }else if(o.status==='cancelled'){
+        actions='<button class="btn r sm" onclick="event.stopPropagation();delOrd('+o.id+')">🗑 Удалить</button>';
+      }
+    }
+    var masterBlock='';
+    if(o.master_name&&o.master_avatar){
+      masterBlock='<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;font-size:10px"><div style="width:24px;height:24px;border-radius:50%;background-image:url('+esc(o.master_avatar)+');background-size:cover;border:2px solid var(--ok);flex-shrink:0"></div><b>'+esc(o.master_name)+'</b> <span style="background:#D1FAE5;color:#065F46;padding:1px 5px;border-radius:6px;font-size:8px;font-weight:800">✅</span></div>';
+    }
+    var commentBlock=o.comment?'<p style="background:var(--s2);padding:6px 8px;border-radius:7px;margin-top:4px">💬 '+esc(o.comment)+'</p>':'';
+    var photosBlock='';
+    if(o.photos&&o.photos.length){
+      photosBlock='<div style="display:flex;gap:4px;margin-top:6px;flex-wrap:wrap">'+o.photos.map(function(p){return '<img src="'+p+'" style="width:50px;height:50px;object-fit:cover;border-radius:6px;border:2px solid var(--p)">'}).join('')+'</div>';
+    }
+    var respBlock='';
+    if(o.responses&&o.responses.length&&o.status==='new'){
+      respBlock='<div style="margin-top:6px;background:#FEF3C7;border:2px solid #FCD34D;border-radius:8px;padding:6px 8px;font-size:10px;color:#92400E;font-weight:800">👥 '+o.responses.length+' мастер(ов) хотят взять</div>';
+    }
+    var payBadge=o.payment_status==='paid'?'<span style="background:#D1FAE5;color:#065F46;padding:1px 6px;border-radius:6px;font-size:9px;font-weight:800">✅ '+(o.payment_method==='cash'?'💵':'💳')+'</span>':'';
+    var rateBadge=o.rating?'<span style="color:var(--warn)">★ '+o.rating+'</span>':'';
+    html+='<div class="oi" onclick="openDetail('+o.id+')">'+masterBlock+'<h4>'+(o.urgent?'⚡ ':'')+esc(o.service)+' — '+esc(o.price)+' ₽ '+rateBadge+' '+payBadge+'</h4><p>📍 '+esc(o.address)+'</p><p>⏰ '+esc(o.time)+'</p>'+commentBlock+photosBlock+respBlock+renderBar(o.status)+'<div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;flex-wrap:wrap;gap:4px"><span class="st '+statusCls(o.status)+'">'+statusText(o.status)+'</span><div style="display:flex;gap:4px;flex-wrap:wrap">'+actions+'</div></div></div>';
+  });
+  $('list').innerHTML=html;
+}
+function openDetail(id){
+  var o=load('pg_orders',[]).filter(function(x){return x.id===id})[0];if(!o)return;
+  var html='';
+  if(o.master_name){
+    html+='<div style="display:flex;align-items:center;gap:8px;padding:10px;background:#F0FDF4;border:2px solid var(--ok);border-radius:10px;margin-bottom:10px">';
+    if(o.master_avatar)html+='<div style="width:44px;height:44px;border-radius:50%;background-image:url('+esc(o.master_avatar)+');background-size:cover;border:2px solid var(--ok);flex-shrink:0"></div>';
+    html+='<div><b style="font-size:12px">'+esc(o.master_name)+'</b><div style="font-size:10px;color:#065F46">✅ Проверен'+(o.master_phone?' • 📞 '+esc(o.master_phone):'')+'</div></div></div>';
+  }
+  html+='<p style="font-size:12px;margin:4px 0"><b>Услуга:</b> '+esc(o.service)+'</p>';
+  html+='<p style="font-size:12px;margin:4px 0"><b>Цена:</b> '+esc(o.price)+' ₽</p>';
+  html+='<p style="font-size:12px;margin:4px 0"><b>Адрес:</b> '+esc(o.address)+'</p>';
+  if(o.comment)html+='<p style="font-size:12px;margin:4px 0"><b>Комментарий:</b> '+esc(o.comment)+'</p>';
+  html+='<p style="font-size:12px;margin:4px 0"><b>Статус:</b> '+statusText(o.status)+'</p>';
+  $('detailBody').innerHTML=html;show('mDetail');
+}
+function cancelOrd(id){
+  if(!confirm('Отменить заказ?'))return;
+  var orders=load('pg_orders',[]),i=orders.findIndex(function(o){return o.id===id});
+  if(i>=0){orders[i].status='cancelled';if(save('pg_orders',orders)){renderOrders();renderBanner()}}
+}
+function delOrd(id){
+  if(!confirm('Удалить заказ?'))return;
+  var orders=load('pg_orders',[]).filter(function(o){return o.id!==id});
+  if(save('pg_orders',orders)){renderOrders();renderBanner()}
+}
+function respond(id){
+  var u=load('pg_user',null);if(!u||u.role!=='executor')return;
+  if(!confirm('Откликнуться на заказ?'))return;
+  var orders=load('pg_orders',[]),i=orders.findIndex(function(o){return o.id===id});if(i<0)return;
+  if(!orders[i].responses)orders[i].responses=[];
+  if(orders[i].responses.some(function(r){return r.master_name===u.name&&r.master_phone===u.phone})){toast('Вы уже откликнулись','info');return}
+  orders[i].responses.push({master_name:u.name,master_avatar:u.avatar||null,master_rating:5.0,master_price:orders[i].price,master_phone:u.phone,master_verified:true,timestamp:Date.now()});
+  if(save('pg_orders',orders)){renderOrders();toast('✅ Отклик отправлен','ok')}
+}
+function openChat(id){
+  chatOrderId=id;
+  var o=load('pg_orders',[]).filter(function(x){return x.id===id})[0];
+  $('chatTitle').textContent='💬 '+(o?o.service:'Чат');
+  loadChat();show('mChat');
+  setTimeout(function(){$('chatInput').focus()},200);
+}
+function loadChat(){
+  var msgs=load('chat_'+chatOrderId,[]),u=load('pg_user',null);
+  if(!msgs.length){$('chatBox').innerHTML='<div style="text-align:center;color:var(--m);font-size:11px;margin-top:20px">Сообщений нет. Напишите первым!</div>';return}
+  $('chatBox').innerHTML=msgs.map(function(m){
+    var me=u&&m.sender===u.name;
+    return '<div class="bub '+(me?'me':'other')+'"><div style="font-size:9px;font-weight:800;opacity:.7;margin-bottom:2px">'+esc(m.sender)+'</div>'+esc(m.text)+'<div class="tm">'+esc(m.time)+'</div></div>';
+  }).join('');
+  setTimeout(function(){$('chatBox').scrollTop=$('chatBox').scrollHeight},50);
+}
+function sendMsg(){
+  var t=$('chatInput').value.trim();if(!t||!chatOrderId)return;
+  var u=load('pg_user',null);if(!u)return;
+  var msgs=load('chat_'+chatOrderId,[]);
+  msgs.push({sender:u.name,role:u.role,text:t,time:new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'})});
+  save('chat_'+chatOrderId,msgs);
+  $('chatInput').value='';loadChat();beep();
+}function openRate(id){rateOrder=id;rateVal=0;updateStars(0);show('mRate')}
+function setRate(v){rateVal=v;updateStars(v);beep()}
+function updateStars(v){document.querySelectorAll('#stars span').forEach(function(s,i){s.style.color=i<v?'var(--warn)':'#DDD'})}
+function submitRate(){
+  if(!rateVal){toast('Поставьте оценку','warn');return}
+  var orders=load('pg_orders',[]),i=orders.findIndex(function(o){return o.id===rateOrder});
+  if(i>=0){orders[i].rating=rateVal;orders[i].status='done';if(save('pg_orders',orders)){toast('⭐ Спасибо за '+rateVal+' звёзд!','ok');hide('mRate');renderOrders();renderBanner()}}
+}
+function openPay(id){
+  var o=load('pg_orders',[]).filter(function(x){return x.id===id})[0];if(!o)return;
+  payOrder=id;$('payAmount').textContent=o.price+' ₽';
+  var html='';
+  if(o.master_name&&o.master_phone){
+    html='<div style="background:#F0FDF4;border:2px solid var(--ok);border-radius:10px;padding:9px;margin-bottom:10px;text-align:left;display:flex;align-items:center;gap:8px">';
+    if(o.master_avatar)html+='<div style="width:36px;height:36px;border-radius:50%;background-image:url('+esc(o.master_avatar)+');background-size:cover;border:2px solid var(--ok);flex-shrink:0"></div>';
+    html+='<div><b style="font-size:11px">'+esc(o.master_name)+'</b><div style="font-size:10px;color:var(--info);font-weight:700">📞 '+esc(o.master_phone)+'</div></div></div>';
+  }
+  $('payMaster').innerHTML=html;
+  payMethod='cash';$('payCash').classList.add('on');$('payCard').classList.remove('on');
+  show('mPay');
+}
+function pickPay(m){payMethod=m;$('payCash').classList.remove('on');$('payCard').classList.remove('on');(m==='cash'?$('payCash'):$('payCard')).classList.add('on')}
+function doPay(){
+  var orders=load('pg_orders',[]),i=orders.findIndex(function(o){return o.id===payOrder});
+  if(i>=0){orders[i].payment_status='paid';orders[i].payment_method=payMethod;
+    if(save('pg_orders',orders)){toast('✅ Оплата '+(payMethod==='cash'?'наличными':'картой'),'ok');hide('mPay');renderOrders()}}
+}
+function openAuth(){
+  authAvatar=null;faceOK=false;
+  $('authAv').style.backgroundImage='none';$('authAv').textContent='👤';
+  $('faceStatus').textContent='Не проверен';$('faceStatus').style.color='var(--m)';
+  pickRole('client');show('mAuth');
+}
+function pickRole(r){
+  $('rbClient').classList.remove('on');$('rbExec').classList.remove('on');
+  (r==='client'?$('rbClient'):$('rbExec')).classList.add('on');
+  $('masterBox').classList.toggle('h',r!=='executor');
+  $('avHint').textContent=r==='executor'?'🔒 Фото появится после селфи':'Фото профиля (необязательно)';
+  beep();
+}
+function login(){
+  var n=$('aName').value.trim(),p=$('aPhone').value.trim(),pw=$('aPass').value.trim();
+  var role=$('rbExec').classList.contains('on')?'executor':'client';
+  if(!n)return toast('Введите имя','err');
+  if(!p)return toast('Введите телефон','err');
+  if(!pw||pw.length<4)return toast('Пароль минимум 4','err');
+  if(role==='executor'&&!faceOK)return toast('❌ Мастер обязан сделать селфи','err');
+  if(role==='executor'&&!authAvatar)return toast('Селфи не сохранилось','err');
+  var u={id:Date.now(),name:n,phone:p,role:role,verified:role==='executor',avatar:authAvatar};
+  save('pg_user',u);
+  lastRespCount=null;lastAvailIds=[];
+  hide('mAuth');toast('✅ Вы вошли как '+n,'ok');
+  ui();st(role==='executor'?'my':'new');
+}
+function logout(){if(!confirm('Выйти?'))return;localStorage.removeItem('pg_user');toast('Вы вышли','info');setTimeout(function(){location.reload()},600)}
+function startFace(){
+  show('mFace');
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){toast('Камера недоступна','err');hide('mFace');return}
+  navigator.mediaDevices.getUserMedia({video:{facingMode:'user'}}).then(function(s){
+    faceStream=s;$('faceVid').srcObject=s;
+  }).catch(function(){toast('Нет доступа к камере','err');hide('mFace')});
+}
+function captureFace(){
+  var v=$('faceVid');
+  if(!v.videoWidth){toast('Камера не готова','warn');return}
+  var c=document.createElement('canvas');c.width=c.height=320;
+  var ctx=c.getContext('2d'),size=Math.min(v.videoWidth,v.videoHeight);
+  var sx=(v.videoWidth-size)/2,sy=(v.videoHeight-size)/2;
+  ctx.drawImage(v,sx,sy,size,size,0,0,320,320);
+  authAvatar=c.toDataURL('image/jpeg',.8);
+  $('authAv').style.backgroundImage='url('+authAvatar+')';$('authAv').textContent='';
+  faceOK=true;
+  $('faceStatus').textContent='✅ Проверен';$('faceStatus').style.color='var(--ok)';
+  cancelFace();toast('✅ Селфи сохранено','ok');
+}
+function cancelFace(){
+  if(faceStream){faceStream.getTracks().forEach(function(t){t.stop()});faceStream=null}
+  hide('mFace');
+}
+function renderCab(){
+  var u=load('pg_user',null);
+  if(!u||u.role!=='executor'){$('cabPanel').classList.add('h');$('cabMsg').classList.remove('h');return}
+  $('cabPanel').classList.remove('h');$('cabMsg').classList.add('h');
+  if(u.avatar)$('cabAv').style.backgroundImage='url('+u.avatar+')';
+  $('cabName').textContent=u.name;
+  var orders=load('pg_orders',[]);
+  var mine=orders.filter(function(o){return o.master_name===u.name});
+  var done=mine.filter(function(o){return o.status==='done'});
+  var earned=done.reduce(function(s,o){return s+(parseInt(o.price,10)||0)},0);
+  var rated=done.filter(function(o){return o.rating});
+  var avg=rated.length?(rated.reduce(function(s,o){return s+o.rating},0)/rated.length).toFixed(1):'0.0';
+  var avail=orders.filter(function(o){return o.status==='new'&&!(o.responses||[]).some(function(r){return r.master_name===u.name})}).length;
+  $('stDone').textContent=done.length;
+  $('stEarn').textContent=earned.toLocaleString('ru-RU')+' ₽';
+  $('stRate').textContent=avg;
+  $('stAvail').textContent=avail;
+}
+function pickTariff(el){document.querySelectorAll('.tariff').forEach(function(x){x.classList.remove('on')});el.classList.add('on');beep()}
+function paySub(){save('pg_sub','active');toast('💳 Подписка активирована!','ok');hide('mSub')}
+function setTheme(t){document.body.classList.toggle('dark',t==='dark');localStorage.setItem('pg_theme',t)}
+function delAcc(){
+  if(!confirm('Удалить аккаунт? Все данные будут стёрты.'))return;
+  localStorage.clear();toast('Аккаунт удалён','ok');setTimeout(function(){location.reload()},600);
+}
+function ui(){
+  var u=load('pg_user',null);
+  if(u){
+    $('btnLogin').classList.add('h');$('btnLogout').classList.remove('h');
+    if(u.role==='executor'){
+      $('btnCab').classList.remove('h');
+      document.querySelector('.nav button[data-tab="new"]').classList.add('h');
+      st('my');
+    }else{
+      $('btnCab').classList.add('h');
+      document.querySelector('.nav button[data-tab="new"]').classList.remove('h');
+      st('new');renderBanner();
+    }
+  }else{
+    $('btnLogin').classList.remove('h');$('btnLogout').classList.add('h');
+    $('btnCab').classList.add('h');
+    document.querySelector('.nav button[data-tab="new"]').classList.remove('h');
+    st('new');
+  }
+}
+function watch(){
+  var u=load('pg_user',null);if(!u)return;
+  var orders=load('pg_orders',[]);
+  if(u.role==='client'){
+    var mine=orders.filter(function(o){return o.status==='new'&&(o.user_id===u.id||o.name===u.name)});
+    var total=mine.reduce(function(s,o){return s+((o.responses||[]).length)},0);
+    if(lastRespCount!==null&&total>lastRespCount){bell();toast('🔔 Новый отклик!','info');renderBanner()}
+    lastRespCount=total;
+  }else{
+    var avail=orders.filter(function(o){return o.status==='new'&&!(o.responses||[]).some(function(r){return r.master_name===u.name})});
+    var ids=avail.map(function(o){return o.id});
+    if(lastAvailIds.length){
+      var newIds=ids.filter(function(id){return lastAvailIds.indexOf(id)===-1});
+      if(newIds.length){bell();toast('🔔 Новый заказ! ('+newIds.length+')','info')}
+    }
+    lastAvailIds=ids;
+  }
+}
+function init(){
+  renderSvc();tick();setInterval(tick,1000);setInterval(watch,3000);
+  if(localStorage.getItem('pg_theme')==='dark')document.body.classList.add('dark');
+  ui();
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+</script>
+</body>
+</html>
